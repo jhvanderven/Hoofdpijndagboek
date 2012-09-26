@@ -1,7 +1,7 @@
 package org.nvh.hoofdpijndagboek;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -49,7 +48,6 @@ public class HPDHead extends SherlockFragmentActivity {
 	public static class HurtingFragmentRight extends HurtingFragment {
 		// TODO: Improve bitmap quality
 		// TODO: Invert the waar bitmap, make it point the other way
-		// TODO: Left has a red background, Right blue
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
@@ -60,7 +58,6 @@ public class HPDHead extends SherlockFragmentActivity {
 	}
 
 	public static class HurtingFragment extends SherlockFragment {
-		int pictureID;
 
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
@@ -70,11 +67,11 @@ public class HPDHead extends SherlockFragmentActivity {
 
 	public static class HeadView extends View {
 		Bitmap b;
-		Bitmap m;
 		Paint paint;
 		Rect dest;
-		long start;
-		int oldms;
+		List<Point> points = new ArrayList<Point>();
+		List<Integer> colors = new ArrayList<Integer>();
+		List<Integer> sizes = new ArrayList<Integer>();
 
 		public HeadView(Context context, int pictureID) {
 			super(context);
@@ -83,96 +80,57 @@ public class HPDHead extends SherlockFragmentActivity {
 			b = bImm.copy(Bitmap.Config.ARGB_8888, true);
 			paint = new Paint();
 			dest = new Rect(0, 0, b.getWidth(), b.getHeight());
-			oldms = 0;
 		}
 
 		@Override
 		protected void onDraw(Canvas canvas) {
 			super.onDraw(canvas);
 			canvas.drawBitmap(b, null, dest, paint);
+			for (int i = 0; i < points.size(); i++) {
+				paint.setColor(colors.get(i));
+				canvas.drawCircle(points.get(i).x, points.get(i).y,
+						sizes.get(i), paint);
+			}
 		}
 
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
 			if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-				// start of the coloring
-				System.out.println("Starting");
-				start = event.getEventTime();
-				System.out.println(start);
-				return true;
-			}
-
-			if (event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
-				start = -1;
-			}
-
-			if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
-				System.out.println("Moving");
-				if (start == -1) {
-					System.out.println("Not started");
-					return false;
-				}
-				// the color gets more mean as the user presses longer
-				int ms = (int) (event.getEventTime() - start)/10;
-				if (ms > 255)
-					ms = 255;
-				System.out.println(ms);
-				int newColor = Color.argb(255, ms, 0, 0);
-				int oldColor = b.getPixel((int) event.getX(),
-						(int) event.getY());
 				Point p = new Point();
 				p.x = (int) event.getX();
 				p.y = (int) event.getY();
-
-				FloodFill(b, p, oldColor, newColor);
+				List<Integer> toDelete = new ArrayList<Integer>();
+				// we want to remove the circle that contains this point
+				// if the user has already drawn something
+				for (int i = 0; i < points.size(); i++) {
+					double square_dist = Math.pow((points.get(i).x - p.x), 2)
+							+ Math.pow((points.get(i).y - p.y), 2);
+					if (square_dist < Math.pow(sizes.get(i), 2)) {
+						// the point is in if its color is red
+						if (colors.get(i) == Color.RED) {
+							toDelete.add(i);
+						}
+					}
+				}
+				for (Integer i : toDelete) {
+					// TODO: I do not understand why a remove
+					// does not work. The onDraw does not redraw the
+					// complete screen. Now the user can erase the bitmap.
+					colors.set(i, Color.WHITE);
+					// colors.remove(i);
+					// sizes.remove(i);
+					// points.remove(i);
+				}
+				if (toDelete.size() == 0) {
+					points.add(p);
+					colors.add(Color.RED);
+					sizes.add(getWidth() / 20);
+				}
 				this.invalidate();
 				return true;
 			}
 
-			if (event.getActionMasked() == MotionEvent.ACTION_UP) {
-				System.out.println("Stopping");
-				if (start != -1) {
-					return true;
-				}
-			}
-
 			return super.onTouchEvent(event);
-		}
-
-		// TODO: Think of a way to store this, perhaps coordinates?
-		private static void FloodFill(Bitmap bmp, Point pt, int targetColor,
-				int replacementColor) {
-			Queue<Point> q = new LinkedList<Point>();
-			q.add(pt);
-			while (q.size() > 0) {
-				Point n = q.poll();
-				if (bmp.getPixel(n.x, n.y) != targetColor)
-					continue;
-
-				Point w = n, e = new Point(n.x + 1, n.y);
-				while ((w.x > 0) && (bmp.getPixel(w.x, w.y) == targetColor)) {
-					bmp.setPixel(w.x, w.y, replacementColor);
-					if ((w.y > 0)
-							&& (bmp.getPixel(w.x, w.y - 1) == targetColor))
-						q.add(new Point(w.x, w.y - 1));
-					if ((w.y < bmp.getHeight() - 1)
-							&& (bmp.getPixel(w.x, w.y + 1) == targetColor))
-						q.add(new Point(w.x, w.y + 1));
-					w.x--;
-				}
-				while ((e.x < bmp.getWidth() - 1)
-						&& (bmp.getPixel(e.x, e.y) == targetColor)) {
-					bmp.setPixel(e.x, e.y, replacementColor);
-
-					if ((e.y > 0)
-							&& (bmp.getPixel(e.x, e.y - 1) == targetColor))
-						q.add(new Point(e.x, e.y - 1));
-					if ((e.y < bmp.getHeight() - 1)
-							&& (bmp.getPixel(e.x, e.y + 1) == targetColor))
-						q.add(new Point(e.x, e.y + 1));
-					e.x++;
-				}
-			}
 		}
 	}
 }
