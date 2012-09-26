@@ -1,0 +1,52 @@
+<resources>
+
+    <string name="app_name">Hoofdpijndagboek</string>
+    <string name="menu_settings">Instellingen</string>
+    <string name="title_activity_main">Hoofdpijndagboek</string>
+    <string name="versturen">opnemen in dagboek</string>
+    <string name="pick_time">tijd</string>
+    <string name="pick_date">datum</string>
+    <string name="geur">geur</string>
+    <string name="weer">weer</string>
+    <string name="humeur">humeur</string>
+    <string name="ernst">ernst</string>
+    <string name="misselijk">misselijk</string>
+    <string name="duizelig">duizelig</string>
+    <string name="licht">licht</string>
+    <string name="inslapen">inslapen</string>
+    <string name="doorslapen">doorslapen</string>
+    <string name="stoelgang">stoelgang</string>
+    <string name="menstruatie">menstruatie</string>
+    <string name="new_fragment">New fragment</string>
+    
+    <string-array name="lgh_array">
+        <item>Geen</item>
+        <item>Laag</item>
+        <item>Gemiddeld</item>
+        <item>Hoog</item>
+    </string-array>
+    <string-array name="weather_array">
+        <item>sneeuw</item>
+        <item>zeer koud</item>
+        <item>storm</item>
+        <item>wind</item>
+        <item>regen</item>
+        <item>koud</item>
+        <item>koel</item>
+        <item>zonnig</item>
+        <item>warm</item>
+        <item>heet</item>
+    </string-array>
+    <string-array name="humeur_array">
+        <item>opgewekt</item>
+        <item>ontspannen</item>
+        <item>vol energie</item>
+        <item>angstig</item>
+        <item>gejaagd</item>
+        <item>verdrietig</item>
+        <item>geërgerd</item>
+        <item>onbegrepen</item>
+        <item>gevoel van onmacht</item>
+    </string-array>
+
+</resources>
