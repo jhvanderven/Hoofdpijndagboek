@@ -1,23 +1,27 @@
 package org.nvh.hoofdpijndagboek;
 
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 
-import android.app.ListActivity;
-import android.os.Bundle;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ProgressBar;
-
 public class HPDMedicins extends SherlockFragmentActivity {
-    private ArrayAdapter<String> mAdapter;
 
 	public void onCreate(Bundle savedInstanceState) {
+        setTheme(MainActivity.THEME); //Used for theme switching in samples
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.fragment_stack);
+	}
 
-        ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
- 
-        mAdapter = new ArrayAdapter<String>(this, R.layout.medicin_row, new String[]{"one", "two","three"});
-//        setListAdapter(mAdapter);
+	public static class MedicinFragment extends SherlockFragment {
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container,
+				Bundle savedInstanceState) {
+			View v = inflater.inflate(R.layout.medicins_layout, container, false);
+			return v;
+		}
     }
-
 }

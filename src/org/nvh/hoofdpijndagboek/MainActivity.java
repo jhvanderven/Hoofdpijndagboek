@@ -37,16 +37,34 @@ public class MainActivity extends SherlockFragmentActivity {
 
 		mTabsAdapter = new TabsAdapter(this, mTabHost, mViewPager);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Wanneer").setIndicator("", getResources().getDrawable(android.R.drawable.ic_menu_agenda)),
+				mTabHost.newTabSpec("Wanneer").setIndicator(
+						"",
+						getResources().getDrawable(
+								android.R.drawable.ic_menu_agenda)),
 				HPDTime.TimingFragment.class, null);
-		mTabsAdapter.addTab(mTabHost.newTabSpec("Waar").setIndicator("", getResources().getDrawable(android.R.drawable.ic_menu_directions)),
-				HPDHead.HurtingFragmentLeft.class, null);
-		mTabsAdapter.addTab(mTabHost.newTabSpec("Waar").setIndicator("", getResources().getDrawable(android.R.drawable.ic_menu_more)),
-				HPDHead.HurtingFragmentRight.class, null);
-		// mTabsAdapter.addTab(mTabHost.newTabSpec("Medicijnen").setIndicator("Medicijnen"),
-		// HPDMedicins.class, null);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Symptomen").setIndicator("", getResources().getDrawable(android.R.drawable.ic_menu_manage)),
+				mTabHost.newTabSpec("Waar").setIndicator(
+						"",
+						getResources().getDrawable(
+								android.R.drawable.ic_menu_directions)),
+				HPDHead.HurtingFragmentLeft.class, null);
+		mTabsAdapter.addTab(
+				mTabHost.newTabSpec("Waar").setIndicator(
+						"",
+						getResources().getDrawable(
+								android.R.drawable.ic_menu_more)),
+				HPDHead.HurtingFragmentRight.class, null);
+		mTabsAdapter.addTab(
+				mTabHost.newTabSpec("Medicijnen").setIndicator(
+						"",
+						getResources().getDrawable(
+								android.R.drawable.ic_media_rew)),
+				HPDMedicins.MedicinFragment.class, null);
+		mTabsAdapter.addTab(
+				mTabHost.newTabSpec("Symptomen").setIndicator(
+						"",
+						getResources().getDrawable(
+								android.R.drawable.ic_menu_manage)),
 				HPDDetails.SymptomsFragment.class, null);
 
 		if (savedInstanceState != null) {

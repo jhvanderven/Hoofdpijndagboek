@@ -52,7 +52,7 @@ public class HPDHead extends SherlockFragmentActivity {
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
 			HeadView v = new HeadView(getActivity(),
-					R.drawable.ic_action_search);
+					R.drawable.waar_mirrored);
 			return v;
 		}
 	}
