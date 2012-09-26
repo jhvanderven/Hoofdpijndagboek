@@ -14,7 +14,6 @@ public class HPDMedicins extends SherlockFragmentActivity {
 	public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Must add the progress bar to the root of the layout
         ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
  
         mAdapter = new ArrayAdapter<String>(this, R.layout.medicin_row, new String[]{"one", "two","three"});
