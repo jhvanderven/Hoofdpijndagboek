@@ -27,7 +27,9 @@ public class HPDDetails extends SherlockFragmentActivity {
     }
 
     public static class SymptomsFragment extends SherlockFragment {
-        @Override
+    	private static View view;
+    	
+    	@Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
         }
@@ -36,6 +38,7 @@ public class HPDDetails extends SherlockFragmentActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.details_layout, container, false);
+            view=v;
             Spinner spinner = (Spinner) v.findViewById(R.id.spinnerWeer);
             ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(), R.array.weather_array,
     				android.R.layout.simple_spinner_item);
@@ -48,6 +51,15 @@ public class HPDDetails extends SherlockFragmentActivity {
     		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     		spinner.setAdapter(adapter);
             return v;
+        }
+        
+        public static String getData(){
+        	StringBuilder sb = new StringBuilder();
+            Spinner spinner = (Spinner) view.findViewById(R.id.spinnerWeer);
+        	sb.append(view.getContext().getString(R.string.weer)).append(":").append(spinner.getSelectedItem().toString()).append("\n");
+    		spinner = (Spinner) view.findViewById(R.id.spinnerHumeur);
+        	sb.append(view.getContext().getString(R.string.humeur)).append(":").append(spinner.getSelectedItem().toString()).append("\n");
+        	return sb.toString();
         }
     }
 }

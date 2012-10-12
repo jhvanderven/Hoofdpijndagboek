@@ -22,6 +22,9 @@ import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 
 public class HPDHead extends SherlockFragmentActivity{
+	public static HurtingFragmentLeft left;
+	public static HurtingFragmentRight right;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setTheme(MainActivity.THEME); // Used for theme switching in samples
@@ -34,8 +37,11 @@ public class HPDHead extends SherlockFragmentActivity{
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
 			HeadView v = new HeadView(getActivity(), R.drawable.waar, this);
+			left = this;
 			return v;
 		}
+		
+		
 	}
 
 	public static class HurtingFragmentRight extends HurtingFragment {
@@ -44,14 +50,26 @@ public class HPDHead extends SherlockFragmentActivity{
 				Bundle savedInstanceState) {
 			HeadView v = new HeadView(getActivity(),
 					R.drawable.waar_mirrored, this);
+			right = this;
 			return v;
 		}
+
 	}
 
 	public static class HurtingFragment extends SherlockFragment{
 		protected List<Point> points = new ArrayList<Point>();
+		
+		// TODO: Remove colors/sizes unless we want to change the color/size based on the ernst
 		protected List<Integer> colors = new ArrayList<Integer>();
 		protected List<Integer> sizes = new ArrayList<Integer>();
+
+		public String getData(){
+			StringBuilder sb = new StringBuilder();
+			for(Point p:points){
+				sb.append("au").append(":").append(p.x).append(";").append(p.y).append("\n");
+			}
+			return sb.toString();
+		}
 	}
 
 	public static class HeadView extends View implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{

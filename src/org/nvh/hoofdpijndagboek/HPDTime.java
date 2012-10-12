@@ -5,20 +5,12 @@ import java.util.Calendar;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
-import android.content.Context;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.SurfaceHolder;
-import android.view.SurfaceHolder.Callback;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -30,9 +22,6 @@ import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 
 public class HPDTime extends SherlockFragmentActivity {
-
-	int mStackLevel = 1;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setTheme(MainActivity.THEME); // Used for theme switching in samples
@@ -43,13 +32,15 @@ public class HPDTime extends SherlockFragmentActivity {
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putInt("level", mStackLevel);
 	}
 
 	public static class TimingFragment extends SherlockFragment {
-		private static TextView startDateTime;
-		private static TextView endDateTime;
-
+		private static View view;
+	
+		public static TextView startDateTime;
+		public static TextView endDateTime;
+		public static Spinner ernst;
+		
 		private static int startDateYear;
 		private static int startDateMonth;
 		private static int startDateDay;
@@ -61,6 +52,12 @@ public class HPDTime extends SherlockFragmentActivity {
 		private static int endTimeHour;
 		private static int endTimeMinute;
 
+		public static String getData(){
+			StringBuilder sb = new StringBuilder();
+			sb.append(view.getContext().getString(R.string.ernst)).append(":").append(ernst.getSelectedItem().toString()).append("\n");
+			return sb.toString();
+		}
+	
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
@@ -70,12 +67,12 @@ public class HPDTime extends SherlockFragmentActivity {
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
 			View v = inflater.inflate(R.layout.time_layout, container, false);
-			Spinner spinner = (Spinner) v.findViewById(R.id.spinnerErnst);
+			ernst = (Spinner) v.findViewById(R.id.spinnerErnst);
 			ArrayAdapter<CharSequence> adapter = ArrayAdapter
 					.createFromResource(getActivity(), R.array.lgh_array,
 							android.R.layout.simple_spinner_item);
 			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			spinner.setAdapter(adapter);
+			ernst.setAdapter(adapter);
 
 			final Calendar c = Calendar.getInstance();
 			c.add(Calendar.HOUR, -5);
@@ -132,7 +129,8 @@ public class HPDTime extends SherlockFragmentActivity {
 
 				}
 			});
-
+			
+			view=v;
 			return v;
 		}
 
@@ -156,29 +154,6 @@ public class HPDTime extends SherlockFragmentActivity {
 			newFragment.show(getActivity().getSupportFragmentManager(),
 					v.toString());
 		}
-
-		// public boolean onCreateOptionsMenu(Menu menu) {
-		// getActivity().getMenuInflater().inflate(R.menu.activity_main, menu);
-		// return true;
-		// }
-		//
-		// public void sendMessage(View view) {
-		// Intent intent = new Intent(Intent.ACTION_INSERT)
-		// .setType("vnd.android.cursor.item/event")
-		// // .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME,
-		// // beginTime.getTimeInMillis())
-		// // .putExtra(CalendarContract.EXTRA_EVENT_END_TIME,
-		// // endTime.getTimeInMillis())
-		// .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
-		// // just included for completeness
-		// .putExtra(Events.TITLE, "Hoofdpijnaanval")
-		// // .putExtra(Events.DESCRIPTION, message)
-		// .putExtra(Events.EVENT_LOCATION, "Hoogland")
-		// .putExtra(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
-		// .putExtra(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE)
-		// .putExtra(Intent.EXTRA_EMAIL, "upload@nvh.org");
-		// startActivity(intent);
-		// }
 
 		public static class TimePickerFragment extends DialogFragment implements
 				TimePickerDialog.OnTimeSetListener {

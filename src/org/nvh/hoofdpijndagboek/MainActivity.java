@@ -1,9 +1,16 @@
 package org.nvh.hoofdpijndagboek;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.CalendarContract;
+import android.provider.CalendarContract.Events;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -24,7 +31,7 @@ public class MainActivity extends SherlockFragmentActivity {
 	TabHost mTabHost;
 	ViewPager mViewPager;
 	TabsAdapter mTabsAdapter;
-
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		setTheme(MainActivity.THEME); // Used for theme switching in samples
@@ -47,13 +54,13 @@ public class MainActivity extends SherlockFragmentActivity {
 						"",
 						getResources().getDrawable(
 								android.R.drawable.ic_menu_directions)),
-				HPDHead.HurtingFragmentLeft.class, null);
+								HPDHead.HurtingFragmentLeft.class, null);
 		mTabsAdapter.addTab(
 				mTabHost.newTabSpec("Waar").setIndicator(
 						"",
 						getResources().getDrawable(
 								android.R.drawable.ic_menu_more)),
-				HPDHead.HurtingFragmentRight.class, null);
+								HPDHead.HurtingFragmentRight.class, null);
 		mTabsAdapter.addTab(
 				mTabHost.newTabSpec("Medicijnen").setIndicator(
 						"",
@@ -86,9 +93,57 @@ public class MainActivity extends SherlockFragmentActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Toast.makeText(this, "Got click: " + item.toString(),
-				Toast.LENGTH_SHORT).show();
+		// we have to gather the information from all the tabs and
+		// create one or more (medication) entries in the calendar
+		String startDateTime = HPDTime.TimingFragment.startDateTime.getText()
+				.toString();
+		Calendar start = parseIsoDate(startDateTime);
+		if (start == null) {
+			return true;
+		}
+		String endDateTime = HPDTime.TimingFragment.endDateTime.getText()
+				.toString();
+		Calendar stop = parseIsoDate(endDateTime);
+		if (stop == null) {
+			return true;
+		}
+		StringBuilder message = new StringBuilder();
+		message.append(HPDTime.TimingFragment.getData());
+		message.append(HPDDetails.SymptomsFragment.getData());
+		message.append(getString(R.string.left)).append(":").append(getString(R.string.ouch)).append("\n");
+		message.append(HPDHead.left.getData());
+		message.append(getString(R.string.right)).append(":").append(getString(R.string.ouch)).append("\n");
+		message.append(HPDHead.right.getData());
+		Intent intent = new Intent(Intent.ACTION_INSERT)
+				.setType("vnd.android.cursor.item/event")
+				.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+						start.getTimeInMillis())
+				.putExtra(CalendarContract.EXTRA_EVENT_END_TIME,
+						stop.getTimeInMillis())
+				.putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
+				// just included for completeness
+				.putExtra(Events.TITLE, "Hoofdpijnaanval")
+				.putExtra(Events.DESCRIPTION, message.toString())
+				.putExtra(Events.EVENT_LOCATION, "Hoogland")
+				.putExtra(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
+				.putExtra(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
+		startActivity(intent);
 		return true;
+	}
+
+	private Calendar parseIsoDate(String date) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		Date someTime = new Date();
+		try {
+			someTime = dateFormat.parse(date);
+		} catch (ParseException e) {
+			Toast.makeText(this, "Error: " + e.getLocalizedMessage(),
+					Toast.LENGTH_SHORT).show();
+			return null;
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(someTime);
+		return cal;
 	}
 
 	/**
