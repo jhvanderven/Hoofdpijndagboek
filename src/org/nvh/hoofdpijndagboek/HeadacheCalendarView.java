@@ -19,7 +19,7 @@ import android.view.View;
 
 public class HeadacheCalendarView extends View {
 	private int cc = 14; // calendar columns
-	private int cr = 28; // calendar rows
+	private int cr = 21; // calendar rows
 	int w, h;
 	Paint p;
 	SimpleDateFormat f = new SimpleDateFormat("MMM");
@@ -50,9 +50,26 @@ public class HeadacheCalendarView extends View {
 
 		public Cell get(Calendar c) {
 			Calendar now = Calendar.getInstance();
-			long days = (now.getTimeInMillis() - c.getTimeInMillis())
-					/ (1000 * 60 * 60 * 24);
-			int d = (int) days;
+			// long days = (now.getTimeInMillis() - c.getTimeInMillis())
+			// / (1000 * 60 * 60 * 24);
+			// int d = (int) days;
+			// int d = now.get(Calendar.YEAR)
+			// * now.getActualMaximum(Calendar.DAY_OF_YEAR)
+			// + now.get(Calendar.DAY_OF_YEAR) - c.get(Calendar.YEAR)
+			// * c.getActualMaximum(Calendar.DAY_OF_YEAR) -
+			// c.get(Calendar.DAY_OF_YEAR);
+
+			int d = now.get(Calendar.DAY_OF_YEAR);
+			if (now.get(Calendar.YEAR) == c.get(Calendar.YEAR)) {
+				d -= c.get(Calendar.DAY_OF_YEAR);
+			} else {
+				now.add(Calendar.YEAR, -1);
+				d+=now.getActualMaximum(Calendar.DAY_OF_YEAR);
+				while (now.get(Calendar.YEAR) != c.get(Calendar.YEAR)) {
+					d += now.getActualMaximum(Calendar.DAY_OF_YEAR);
+				}
+				d -= c.get(Calendar.DAY_OF_YEAR);
+			}
 			if (d == cell.N * cell.M) {
 				cell.i = cell.j = 0;
 			} else {
