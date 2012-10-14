@@ -5,9 +5,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
+import android.annotation.TargetApi;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
@@ -31,7 +36,7 @@ public class MainActivity extends SherlockFragmentActivity {
 	TabHost mTabHost;
 	ViewPager mViewPager;
 	TabsAdapter mTabsAdapter;
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		setTheme(MainActivity.THEME); // Used for theme switching in samples
@@ -54,13 +59,13 @@ public class MainActivity extends SherlockFragmentActivity {
 						"",
 						getResources().getDrawable(
 								android.R.drawable.ic_menu_directions)),
-								HPDHead.HurtingFragmentLeft.class, null);
+				HPDHead.HurtingFragmentLeft.class, null);
 		mTabsAdapter.addTab(
 				mTabHost.newTabSpec("Waar").setIndicator(
 						"",
 						getResources().getDrawable(
 								android.R.drawable.ic_menu_more)),
-								HPDHead.HurtingFragmentRight.class, null);
+				HPDHead.HurtingFragmentRight.class, null);
 		mTabsAdapter.addTab(
 				mTabHost.newTabSpec("Medicijnen").setIndicator(
 						"",
@@ -108,26 +113,83 @@ public class MainActivity extends SherlockFragmentActivity {
 			return true;
 		}
 		StringBuilder message = new StringBuilder();
-		message.append(HPDTime.TimingFragment.getData());
-		message.append(HPDDetails.SymptomsFragment.getData());
-		message.append(getString(R.string.left)).append(":").append(getString(R.string.ouch)).append("\n");
-		message.append(HPDHead.left.getData());
-		message.append(getString(R.string.right)).append(":").append(getString(R.string.ouch)).append("\n");
-		message.append(HPDHead.right.getData());
-		Intent intent = new Intent(Intent.ACTION_INSERT)
-				.setType("vnd.android.cursor.item/event")
-				.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME,
-						start.getTimeInMillis())
-				.putExtra(CalendarContract.EXTRA_EVENT_END_TIME,
-						stop.getTimeInMillis())
-				.putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
-				// just included for completeness
-				.putExtra(Events.TITLE, "Hoofdpijnaanval")
-				.putExtra(Events.DESCRIPTION, message.toString())
-				.putExtra(Events.EVENT_LOCATION, "Hoogland")
-				.putExtra(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
-				.putExtra(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
-		startActivity(intent);
+		try {
+			message.append(HPDTime.TimingFragment.getData());
+		} catch (Exception e) {
+		} finally {
+			// user did not visit one of the other tabs
+		}
+		try {
+			message.append(HPDDetails.SymptomsFragment.getData());
+		} catch (Exception e) {
+		} finally {
+		}
+		message.append(getString(R.string.left)).append(":")
+				.append(getString(R.string.ouch)).append("\n");
+		try {
+			message.append(HPDHead.left.getData());
+		} catch (Exception e) {
+		} finally {
+		}
+		message.append(getString(R.string.right)).append(":")
+				.append(getString(R.string.ouch)).append("\n");
+		try {
+			message.append(HPDHead.right.getData());
+		} catch (Exception e) {
+		} finally {
+		}
+
+		boolean truer = true;
+		if (truer){
+			// TODO: Check for duplicates. Repeatedly hitting the save button inserts events.
+			// this works on Fienke's phone, but the tablet has never heard of CalendarContract
+			// so we do the literals that may change with every new release of android. Sigh.
+			ContentResolver cr = getContentResolver();
+			ContentValues values = new ContentValues();
+            values.put("calendar_id", 1);
+			values.put("dtstart", start.getTimeInMillis());
+			values.put("dtend", stop.getTimeInMillis());
+			values.put("title", getString(R.string.calendar_entry_title));
+			values.put("description", message.toString());
+			values.put("eventTimezone", TimeZone.getDefault().getID());
+			values.put("eventLocation", "");
+			//values.put("accessLevel", 2);
+			cr.insert(Uri.parse("content://com.android.calendar/events"), values);
+			findViewById(R.id.hcv).invalidate();
+//		} else if (true) {
+//			// this works on Fienke's phone, but the tablet has never heard of CalendarContract
+//			ContentResolver cr = getContentResolver();
+//			ContentValues values = new ContentValues();
+//            values.put(Events.CALENDAR_ID, 1);
+//			values.put(Events.DTSTART, start.getTimeInMillis());
+//			values.put(Events.DTEND, stop.getTimeInMillis());
+//			values.put(Events.TITLE, getString(R.string.calendar_entry_title));
+//			values.put(Events.DESCRIPTION, message.toString());
+//			values.put(Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
+//			values.put(Events.EVENT_LOCATION, "");
+//			values.put(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
+//			cr.insert(Events.CONTENT_URI, values);
+//			findViewById(R.id.hcv).invalidate();
+		} else {
+			// this is the nice way to do it, giving the user a way out
+			// but it does not work, except in the emulator
+			Intent intent = new Intent(Intent.ACTION_EDIT)
+					.setData(Uri.parse("content://com.android.calendar/events"))
+					// .setType("vnd.android.cursor.item/event")
+					.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+							start.getTimeInMillis())
+					.putExtra(CalendarContract.EXTRA_EVENT_END_TIME,
+							stop.getTimeInMillis())
+					.putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
+					// just included for completeness
+					.putExtra(Events.TITLE, "Hoofdpijnaanval")
+					.putExtra(Events.DESCRIPTION, message.toString())
+					.putExtra(Events.EVENT_LOCATION, "Hoogland")
+					// use the simple (non-GPS) location
+					.putExtra(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
+					.putExtra(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
+			startActivity(intent);
+		}
 		return true;
 	}
 

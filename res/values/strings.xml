@@ -21,6 +21,7 @@
     <string name="left">links</string>
     <string name="right">rechts</string>
     <string name="ouch">au</string>
+    <string name="calendar_entry_title">Hoofdpijnaanval</string>
     
     <string-array name="lgh_array">
         <item>Geen</item>
