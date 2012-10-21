@@ -3,10 +3,13 @@ package org.nvh.hoofdpijndagboek;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -14,27 +17,105 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 
 public class HeadacheCalendarView extends View {
-	private int cc = 14; // calendar columns
-	private int cr = 21; // calendar rows
+	public class CalendarOnLongClickListener implements OnLongClickListener {
+		@Override
+		public boolean onLongClick(View v) {
+			HeadacheCalendarView view = (HeadacheCalendarView) v;
+			SetCalendarDisplayDialog scdd = new SetCalendarDisplayDialog();
+			// this works because our context is the MainActivity
+			FragmentActivity a = (FragmentActivity) getContext();
+			Bundle args = new Bundle();
+			args.putInt("rows", view.cr);
+			args.putInt("columns", view.cc);
+			scdd.setArguments(args);
+			scdd.show(a.getSupportFragmentManager(), null);
+			return false;
+		}
+	}
+
+	public class SetCalendarDisplayDialog extends DialogFragment {
+		EditText etCols, etRows;
+
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState) {
+			// Use the Builder class for convenient dialog construction
+			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+			// Get the layout inflater
+			LayoutInflater inflater = getActivity().getLayoutInflater();
+
+			// Inflate and set the layout for the dialog
+			// Pass null as the parent view because its going in the dialog
+			// layout
+			View v = inflater.inflate(R.layout.calendar_columns, null);
+			builder.setView(v)
+					.setPositiveButton("OK",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									int c = Integer.parseInt(etCols.getText()
+											.toString());
+									int r = Integer.parseInt(etRows.getText()
+											.toString());
+									HeadacheCalendarView.this.cc = c;
+									HeadacheCalendarView.this.cr = r;
+									HeadacheCalendarView.this.cell = new Cell(
+											c, r);
+									HeadacheCalendarView.this.invalidate();
+								}
+							})
+					.setNegativeButton("Cancel",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									// User cancelled the dialog
+								}
+							});
+
+			builder.setMessage("Hatseflats");
+			// Create the AlertDialog object and return it
+			AlertDialog dialog = builder.create();
+			Bundle b = getArguments();
+			etCols = (EditText) v.findViewById(R.id.calendar_cols);
+			etRows = (EditText) v.findViewById(R.id.calendar_rows);
+			Integer c = b.getInt("columns");
+			Integer r = b.getInt("rows");
+			etCols.setText(c.toString());
+			etRows.setText(r.toString());
+			return dialog;
+		}
+	}
+
+	public int cc = 21; // calendar columns
+	public int cr = 21; // calendar rows
 	int w, h;
 	Paint p;
-	SimpleDateFormat f = new SimpleDateFormat("MMM");
+	SimpleDateFormat f = new SimpleDateFormat("M");
 	SimpleDateFormat df = new SimpleDateFormat("d");
 	Rect rect = new Rect(); // lint says to create up front and reuse
 	Cell cell = new Cell(cc, cr);
 
 	public HeadacheCalendarView(Context context) {
 		super(context);
-		p = new Paint();
+		init();
 	}
 
 	public HeadacheCalendarView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		init();
+	}
+
+	private void init() {
 		p = new Paint();
+		setOnLongClickListener(new CalendarOnLongClickListener());
 	}
 
 	private class Cell {
@@ -64,8 +145,9 @@ public class HeadacheCalendarView extends View {
 				d -= c.get(Calendar.DAY_OF_YEAR);
 			} else {
 				now.add(Calendar.YEAR, -1);
-				d+=now.getActualMaximum(Calendar.DAY_OF_YEAR);
+				d += now.getActualMaximum(Calendar.DAY_OF_YEAR);
 				while (now.get(Calendar.YEAR) != c.get(Calendar.YEAR)) {
+					now.add(Calendar.YEAR, -1);
 					d += now.getActualMaximum(Calendar.DAY_OF_YEAR);
 				}
 				d -= c.get(Calendar.DAY_OF_YEAR);
@@ -88,6 +170,28 @@ public class HeadacheCalendarView extends View {
 		}
 	}
 
+	private void highlight(Canvas canvas, int xstep, int ystep, int targetDayOfWeek, int color, boolean fill){
+		p.setColor(color);
+		Calendar cal = Calendar.getInstance();
+		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+		int yDayOffset = (dayOfWeek - targetDayOfWeek + 7) % 7;
+		Calendar day = Calendar.getInstance();
+		day.add(Calendar.DAY_OF_YEAR, -1 * yDayOffset);
+		for (int w = cc * cr / 7; w > 0; w--) {
+			cell.get(day);
+			rect.left = cell.i * xstep + 1;
+			rect.top = cell.j * ystep;
+			rect.right = rect.left + xstep;
+			if(fill){
+				rect.bottom = rect.top + ystep;
+			}else{
+				rect.bottom = rect.top + ystep / 5;
+			}
+			canvas.drawRect(rect, p);
+			day.add(Calendar.DAY_OF_YEAR, -7);
+		}
+		
+	}
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
@@ -114,25 +218,11 @@ public class HeadacheCalendarView extends View {
 		}
 
 		// bottom-right is today
-		// mark all Mondays
-		p.setColor(Color.CYAN);
-		Calendar cal = Calendar.getInstance();
-		// Rect rect;
-		int day = cal.get(Calendar.DAY_OF_WEEK);
-		int yDayOffset = (day - Calendar.MONDAY + 7) % 7;
-		Calendar monday = Calendar.getInstance();
-		monday.add(Calendar.DAY_OF_YEAR, -1 * yDayOffset);
-		for (int w = cc * cr / 7; w > 0; w--) {
-			cell.get(monday);
-			rect.left = cell.i * xstep + 1;
-			rect.top = cell.j * ystep;
-			rect.right = rect.left + xstep;
-			rect.bottom = rect.top + ystep / 5;
-			canvas.drawRect(rect, p);
-			monday.add(Calendar.DAY_OF_YEAR, -7);
-		}
+//		highlight(canvas, xstep, ystep, Calendar.MONDAY, Color.CYAN, false);
+		highlight(canvas, xstep, ystep, Calendar.SATURDAY, Color.argb(128, 192, 192, 192), true);
+		highlight(canvas, xstep, ystep, Calendar.SUNDAY, Color.argb(128, 255, 192, 192), true);
 
-		// and beginnings of month
+		// mark beginnings of month
 		p.setTextSize(ystep - 5);
 		Calendar first = Calendar.getInstance();
 		first.set(Calendar.DAY_OF_MONTH, 1);
@@ -148,14 +238,22 @@ public class HeadacheCalendarView extends View {
 			rect.bottom = rect.top + ystep;
 			canvas.drawRect(rect, p);
 
-			// a red top
+			if (first.get(Calendar.MONTH) == Calendar.JANUARY) {
+				// new year
+				p.setColor(Color.YELLOW);
+			} else {
+				// a red top
+				p.setColor(Color.RED);
+			}
 			rect.bottom = rect.top + ystep / 5;
-			p.setColor(Color.RED);
 			canvas.drawRect(rect, p);
 
 			// the name or number of the month
 			p.setColor(Color.BLACK);
-			canvas.drawText(f.format(first.getTime()), cell.i * xstep + 1,
+			Rect bounds = new Rect();
+			String s = f.format(first.getTime());
+			p.getTextBounds(s, 0, s.length(), bounds);
+			canvas.drawText(s, cell.i * xstep + (xstep - bounds.width()) / 2,
 					(cell.j) * ystep + ystep - 3, p);
 			first.add(Calendar.MONTH, -1);
 		}
@@ -191,7 +289,7 @@ public class HeadacheCalendarView extends View {
 			cursor.close();
 		}
 
-		cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance();
 		// TODO: I wonder if this works for all phone makers... I read that some
 		// replaced the calendar with something of their own.
 		// But that was before com.android.calendar
@@ -223,7 +321,7 @@ public class HeadacheCalendarView extends View {
 				end.setTimeInMillis(eventCursor.getLong(2));
 				Boolean allDay = !eventCursor.getString(3).equals("0");
 				String description = eventCursor.getString(4);
-				if (title.contains("irthday")) {
+				if (title.contains("irthday")) {// TODO: check for yearly recurring rule...
 					cell.get(begin);
 					int i = cell.i;
 					int j = cell.j;
@@ -275,7 +373,6 @@ public class HeadacheCalendarView extends View {
 				System.out.println("---------------------");
 			}
 		}
-		first.add(Calendar.MONTH, -1);
 	}
 
 	/*
