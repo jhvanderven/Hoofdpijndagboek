@@ -47,6 +47,7 @@ public class MainActivity extends SherlockFragmentActivity {
 	Location whereIsPhone;
 	LocationListener locationListener;
 	Address here = null;
+	int geoCodeExceptionCounter = 0;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -126,35 +127,33 @@ public class MainActivity extends SherlockFragmentActivity {
 				.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 	}
 
-	@TargetApi(9)
 	protected void makeUseOfNewLocation(Location location) {
-		System.out.println(location);
 		// Check whether the new location fix is more or less accurate
 		int accuracyDelta = (int) (location.getAccuracy() - whereIsPhone
 				.getAccuracy());
 		if (accuracyDelta < 0) {
 			whereIsPhone = location;
-			if (Geocoder.isPresent()) {
-				// find the address
-				Geocoder gcd = new Geocoder(this, Locale.getDefault());
-				List<Address> addresses = null;
-				try {
-					addresses = gcd.getFromLocation(whereIsPhone.getLatitude(),
-							whereIsPhone.getLongitude(), 1);
-					if (addresses.size() > 0) {
-						here = addresses.get(0);
-					}
-					// stop listening, save battery
-					LocationManager locationManager = (LocationManager) this
-							.getSystemService(Context.LOCATION_SERVICE);
-					locationManager.removeUpdates(locationListener);
-				} catch (IOException e) {
+			// find the address
+			Geocoder gcd = new Geocoder(this, Locale.getDefault());
+			List<Address> addresses = null;
+			try {
+				addresses = gcd.getFromLocation(whereIsPhone.getLatitude(),
+						whereIsPhone.getLongitude(), 1);
+				if (addresses.size() > 0) {
+					here = addresses.get(0);
 				}
-			} else {
-				// no point in listening
+				// stop listening, save battery
 				LocationManager locationManager = (LocationManager) this
 						.getSystemService(Context.LOCATION_SERVICE);
 				locationManager.removeUpdates(locationListener);
+			} catch (IOException e) {
+				geoCodeExceptionCounter++;
+				if (geoCodeExceptionCounter > 10) {
+					// give up, save battery
+					LocationManager locationManager = (LocationManager) this
+							.getSystemService(Context.LOCATION_SERVICE);
+					locationManager.removeUpdates(locationListener);
+				}
 			}
 		}
 	}
@@ -276,9 +275,9 @@ public class MainActivity extends SherlockFragmentActivity {
 	}
 
 	private String getLocation() {
-		if(here==null){
+		if (here == null) {
 			return "";
-		}else{
+		} else {
 			return here.getLocality();
 		}
 	}
