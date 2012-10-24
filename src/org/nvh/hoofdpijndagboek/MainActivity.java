@@ -1,10 +1,13 @@
 package org.nvh.hoofdpijndagboek;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import android.annotation.TargetApi;
@@ -12,6 +15,11 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract;
@@ -36,6 +44,9 @@ public class MainActivity extends SherlockFragmentActivity {
 	TabHost mTabHost;
 	ViewPager mViewPager;
 	TabsAdapter mTabsAdapter;
+	Location whereIsPhone;
+	LocationListener locationListener;
+	Address here = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -81,6 +92,70 @@ public class MainActivity extends SherlockFragmentActivity {
 
 		if (savedInstanceState != null) {
 			mTabHost.setCurrentTabByTag(savedInstanceState.getString("tab"));
+		}
+
+		// Acquire a reference to the system Location Manager
+		LocationManager locationManager = (LocationManager) this
+				.getSystemService(Context.LOCATION_SERVICE);
+
+		// Define a listener that responds to location updates
+		locationListener = new LocationListener() {
+			public void onLocationChanged(Location location) {
+				// Called when a new location is found by the network location
+				// provider.
+				makeUseOfNewLocation(location);
+			}
+
+			public void onStatusChanged(String provider, int status,
+					Bundle extras) {
+			}
+
+			public void onProviderEnabled(String provider) {
+			}
+
+			public void onProviderDisabled(String provider) {
+			}
+		};
+
+		// Register the listener with the Location Manager to receive location
+		// updates
+		locationManager.requestLocationUpdates(
+				LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+
+		whereIsPhone = locationManager
+				.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+	}
+
+	@TargetApi(9)
+	protected void makeUseOfNewLocation(Location location) {
+		System.out.println(location);
+		// Check whether the new location fix is more or less accurate
+		int accuracyDelta = (int) (location.getAccuracy() - whereIsPhone
+				.getAccuracy());
+		if (accuracyDelta < 0) {
+			whereIsPhone = location;
+			if (Geocoder.isPresent()) {
+				// find the address
+				Geocoder gcd = new Geocoder(this, Locale.getDefault());
+				List<Address> addresses = null;
+				try {
+					addresses = gcd.getFromLocation(whereIsPhone.getLatitude(),
+							whereIsPhone.getLongitude(), 1);
+					if (addresses.size() > 0) {
+						here = addresses.get(0);
+					}
+					// stop listening, save battery
+					LocationManager locationManager = (LocationManager) this
+							.getSystemService(Context.LOCATION_SERVICE);
+					locationManager.removeUpdates(locationListener);
+				} catch (IOException e) {
+				}
+			} else {
+				// no point in listening
+				LocationManager locationManager = (LocationManager) this
+						.getSystemService(Context.LOCATION_SERVICE);
+				locationManager.removeUpdates(locationListener);
+			}
 		}
 	}
 
@@ -140,36 +215,42 @@ public class MainActivity extends SherlockFragmentActivity {
 		}
 
 		boolean truer = true;
-		if (truer){
-			// TODO: Check for duplicates. Repeatedly hitting the save button inserts events.
-			// this works on Fienke's phone, but the tablet has never heard of CalendarContract
-			// so we do the literals that may change with every new release of android. Sigh.
+		if (truer) {
+			// TODO: Check for duplicates. Repeatedly hitting the save button
+			// inserts events.
+			// this works on Fienke's phone, but the tablet has never heard of
+			// CalendarContract
+			// so we do the literals that may change with every new release of
+			// android. Sigh.
 			ContentResolver cr = getContentResolver();
 			ContentValues values = new ContentValues();
-            values.put("calendar_id", 1);
+			values.put("calendar_id", 1);
 			values.put("dtstart", start.getTimeInMillis());
 			values.put("dtend", stop.getTimeInMillis());
 			values.put("title", getString(R.string.calendar_entry_title));
 			values.put("description", message.toString());
 			values.put("eventTimezone", TimeZone.getDefault().getID());
-			values.put("eventLocation", "");
-			//values.put("accessLevel", 2);
-			cr.insert(Uri.parse("content://com.android.calendar/events"), values);
+			values.put("eventLocation", getLocation());
+			// values.put("accessLevel", 2);
+			cr.insert(Uri.parse("content://com.android.calendar/events"),
+					values);
 			findViewById(R.id.hcv).invalidate();
-//		} else if (true) {
-//			// this works on Fienke's phone, but the tablet has never heard of CalendarContract
-//			ContentResolver cr = getContentResolver();
-//			ContentValues values = new ContentValues();
-//            values.put(Events.CALENDAR_ID, 1);
-//			values.put(Events.DTSTART, start.getTimeInMillis());
-//			values.put(Events.DTEND, stop.getTimeInMillis());
-//			values.put(Events.TITLE, getString(R.string.calendar_entry_title));
-//			values.put(Events.DESCRIPTION, message.toString());
-//			values.put(Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
-//			values.put(Events.EVENT_LOCATION, "");
-//			values.put(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
-//			cr.insert(Events.CONTENT_URI, values);
-//			findViewById(R.id.hcv).invalidate();
+			// } else if (true) {
+			// // this works on Fienke's phone, but the tablet has never heard
+			// of CalendarContract
+			// ContentResolver cr = getContentResolver();
+			// ContentValues values = new ContentValues();
+			// values.put(Events.CALENDAR_ID, 1);
+			// values.put(Events.DTSTART, start.getTimeInMillis());
+			// values.put(Events.DTEND, stop.getTimeInMillis());
+			// values.put(Events.TITLE,
+			// getString(R.string.calendar_entry_title));
+			// values.put(Events.DESCRIPTION, message.toString());
+			// values.put(Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
+			// values.put(Events.EVENT_LOCATION, "");
+			// values.put(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
+			// cr.insert(Events.CONTENT_URI, values);
+			// findViewById(R.id.hcv).invalidate();
 		} else {
 			// this is the nice way to do it, giving the user a way out
 			// but it does not work, except in the emulator
@@ -182,15 +263,24 @@ public class MainActivity extends SherlockFragmentActivity {
 							stop.getTimeInMillis())
 					.putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
 					// just included for completeness
-					.putExtra(Events.TITLE, "Hoofdpijnaanval")
+					.putExtra(Events.TITLE,
+							getString(R.string.title_activity_main))
 					.putExtra(Events.DESCRIPTION, message.toString())
-					.putExtra(Events.EVENT_LOCATION, "Hoogland")
+					.putExtra(Events.EVENT_LOCATION, getLocation())
 					// use the simple (non-GPS) location
 					.putExtra(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
 					.putExtra(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
 			startActivity(intent);
 		}
 		return true;
+	}
+
+	private String getLocation() {
+		if(here==null){
+			return "";
+		}else{
+			return here.getLocality();
+		}
 	}
 
 	private Calendar parseIsoDate(String date) {
