@@ -8,51 +8,111 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="vertical" >
 
         <TextView
             android:id="@+id/textView1"
-            android:layout_width="0px"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Rows" />
+            android:text="@string/rows" />
 
-        <EditText
-            android:id="@+id/calendar_rows"
-            android:layout_width="0px"
+        <RadioGroup
+            android:id="@+id/radioWeeksRows"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:inputType="number" >
-        </EditText>
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/week1r"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="1" />
+
+            <RadioButton
+                android:id="@+id/week2r"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2" />
+
+            <RadioButton
+                android:id="@+id/week3r"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3" />
+
+            <RadioButton
+                android:id="@+id/week4r"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4" />
+
+            <RadioButton
+                android:id="@+id/week5r"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5" />
+
+         </RadioGroup>
     </LinearLayout>
 
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="vertical" >
 
         <TextView
             android:id="@+id/textView2"
-            android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Columns" />
+            android:layout_width="wrap_content"
+            android:text="@string/columns" />
 
-        <EditText
-            android:id="@+id/calendar_cols"
-            android:layout_width="0px"
+        <RadioGroup
+            android:id="@+id/radioWeeksColumns"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:inputType="number" />
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/week1c"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="1" />
+
+            <RadioButton
+                android:id="@+id/week2c"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2" />
+
+            <RadioButton
+                android:id="@+id/week3c"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3" />
+
+            <RadioButton
+                android:id="@+id/week4c"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4" />
+
+            <RadioButton
+                android:id="@+id/week5c"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5" />
+
+        </RadioGroup>
+
     </LinearLayout>
 
     <CheckBox
         android:id="@+id/leftright"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Months in rows" />
+        android:text="@string/months_in_rows" />
 
 </LinearLayout>

@@ -22,9 +22,13 @@
     <string name="right">rechts</string>
     <string name="ouch">au</string>
     <string name="calendar_entry_title">Hoofdpijnaanval</string>
-    
+    <string name="ja">ja</string>
+    <string name="event_saved">Deze gebeurtenis is opgeslagen in de agenda.</string>
+    <string name="rows">weken horizontaal (rijen)</string>
+    <string name="columns">weken verticaal (kolommen)</string>
+    <string name="months_in_rows">maanden horizontaal</string>
+    <string name="title_for_grid">hoeveel weken wil je zien?</string>
     <string-array name="lgh_array">
-        <item>Geen</item>
         <item>Laag</item>
         <item>Gemiddeld</item>
         <item>Hoog</item>
@@ -52,5 +56,4 @@
         <item>onbegrepen</item>
         <item>gevoel van onmacht</item>
     </string-array>
-
 </resources>

@@ -71,13 +71,13 @@ public class MainActivity extends SherlockFragmentActivity {
 						"",
 						getResources().getDrawable(
 								android.R.drawable.ic_menu_directions)),
-				HPDHead.HurtingFragmentLeft.class, null);
+				HPDHeadLeft.HurtingFragmentLeft.class, null);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Waar").setIndicator(
+				mTabHost.newTabSpec("Raaw").setIndicator(
 						"",
 						getResources().getDrawable(
 								android.R.drawable.ic_menu_more)),
-				HPDHead.HurtingFragmentRight.class, null);
+				HPDHeadRight.HurtingFragmentRight.class, null);
 		mTabsAdapter.addTab(
 				mTabHost.newTabSpec("Medicijnen").setIndicator(
 						"",
@@ -119,7 +119,7 @@ public class MainActivity extends SherlockFragmentActivity {
 		};
 
 		// Register the listener with the Location Manager to receive location
-		// updates
+		// updates. The tablet only has wifi. It never will respond to this.
 		locationManager.requestLocationUpdates(
 				LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 
@@ -129,8 +129,13 @@ public class MainActivity extends SherlockFragmentActivity {
 
 	protected void makeUseOfNewLocation(Location location) {
 		// Check whether the new location fix is more or less accurate
-		int accuracyDelta = (int) (location.getAccuracy() - whereIsPhone
-				.getAccuracy());
+		int accuracyDelta;
+		if (whereIsPhone == null) {
+			accuracyDelta = -1; // must be better :-)
+		} else {
+			accuracyDelta = (int) (location.getAccuracy() - whereIsPhone
+					.getAccuracy());
+		}
 		if (accuracyDelta < 0) {
 			whereIsPhone = location;
 			// find the address
@@ -187,6 +192,8 @@ public class MainActivity extends SherlockFragmentActivity {
 			return true;
 		}
 		StringBuilder message = new StringBuilder();
+		int ernstOnHead = 0;
+		int ernstBijdrage = 0;
 		try {
 			message.append(HPDTime.TimingFragment.getData());
 		} catch (Exception e) {
@@ -201,18 +208,33 @@ public class MainActivity extends SherlockFragmentActivity {
 		message.append(getString(R.string.left)).append(":")
 				.append(getString(R.string.ouch)).append("\n");
 		try {
-			message.append(HPDHead.left.getData());
+			message.append(HPDHeadLeft.HurtingFragmentLeft.getData());
+			int leftErnst = HPDHeadLeft.HurtingFragmentLeft.getErnst();
+			if(leftErnst>0){
+				ernstBijdrage++;
+				ernstOnHead +=leftErnst;
+			}
 		} catch (Exception e) {
 		} finally {
 		}
 		message.append(getString(R.string.right)).append(":")
 				.append(getString(R.string.ouch)).append("\n");
 		try {
-			message.append(HPDHead.right.getData());
+			message.append(HPDHeadRight.HurtingFragmentRight.getData());
+			int rightErnst = HPDHeadRight.HurtingFragmentRight.getErnst();
+			if(rightErnst>0){
+				ernstBijdrage++;
+				ernstOnHead +=rightErnst;
+			}
 		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 		}
-
+		message.append(getString(R.string.ernst))
+				.append(":")
+				.append(getResources().getStringArray(R.array.lgh_array)
+						[(int) Math.max(0, Math.round(ernstOnHead / (float)ernstBijdrage) - 1)])
+				.append("\n");
 		boolean truer = true;
 		if (truer) {
 			// TODO: Check for duplicates. Repeatedly hitting the save button
@@ -230,10 +252,21 @@ public class MainActivity extends SherlockFragmentActivity {
 			values.put("description", message.toString());
 			values.put("eventTimezone", TimeZone.getDefault().getID());
 			values.put("eventLocation", getLocation());
-			// values.put("accessLevel", 2);
+			if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
+				// the tablet does not understand these columns
+				values.put("availability", 0);
+				values.put("accessLevel", 2);
+			}
 			cr.insert(Uri.parse("content://com.android.calendar/events"),
 					values);
-			findViewById(R.id.hcv).invalidate();
+			// This is only needed when we are on the first tab
+			View hcv = findViewById(R.id.hcv);
+			if (hcv != null) {
+				hcv.invalidate();
+			}
+			// provide some feedback
+			Toast.makeText(MainActivity.this, R.string.event_saved,
+					Toast.LENGTH_LONG).show();
 			// } else if (true) {
 			// // this works on Fienke's phone, but the tablet has never heard
 			// of CalendarContract
@@ -263,7 +296,7 @@ public class MainActivity extends SherlockFragmentActivity {
 					.putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
 					// just included for completeness
 					.putExtra(Events.TITLE,
-							getString(R.string.title_activity_main))
+							getString(R.string.calendar_entry_title))
 					.putExtra(Events.DESCRIPTION, message.toString())
 					.putExtra(Events.EVENT_LOCATION, getLocation())
 					// use the simple (non-GPS) location

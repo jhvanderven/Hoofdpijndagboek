@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.Spinner;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -68,8 +69,29 @@ public class HPDDetails extends SherlockFragmentActivity {
 						.append(":")
 						.append(spinner.getSelectedItem().toString())
 						.append("\n");
+				sb.append(handleCheckBox(R.id.menstruatie, R.string.menstruatie));
+				sb.append(handleCheckBox(R.id.misselijk, R.string.misselijk));
+				sb.append(handleCheckBox(R.id.licht, R.string.licht));
+				sb.append(handleCheckBox(R.id.duizelig, R.string.duizelig));
+				sb.append(handleCheckBox(R.id.geur, R.string.geur));
+				sb.append(handleCheckBox(R.id.inslapen, R.string.inslapen));
+				sb.append(handleCheckBox(R.id.doorslapen, R.string.doorslapen));
+				sb.append(handleCheckBox(R.id.stoelgang, R.string.stoelgang));
 			}
 			return sb.toString();
+		}
+
+		private static String handleCheckBox(int cbId, int stringId) {
+			CheckBox cb = (CheckBox) view.findViewById(cbId);
+			if (cb.isChecked()) {
+				StringBuilder sb = new StringBuilder();
+				sb.append(view.getContext().getString(stringId)).append(":")
+						.append(view.getContext().getString(R.string.ja))
+						.append("\n");
+				return sb.toString();
+			}
+
+			return "";
 		}
 	}
 }
