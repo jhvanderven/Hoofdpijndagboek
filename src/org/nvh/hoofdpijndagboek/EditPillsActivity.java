@@ -99,7 +99,8 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 		public void editMedicationName(final int position,
 				String originalMedication) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-			builder.setTitle(getActivity().getString(R.string.pill_new_message));
+			builder.setTitle(getString(R.string.pill_new_medicin));
+			builder.setMessage(getString(R.string.pill_new_message));
 
 			// Set up the input
 			final EditText input = new EditText(getActivity());
@@ -108,7 +109,7 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 			builder.setView(input);
 
 			// Set up the buttons
-			builder.setPositiveButton("OK",
+			builder.setPositiveButton(getString(R.string.dialogOk),
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
@@ -120,7 +121,7 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 							}
 						}
 					});
-			builder.setNegativeButton("Cancel",
+			builder.setNegativeButton(getString(R.string.dialogCancel),
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
