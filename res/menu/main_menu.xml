@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/menu_save"
+        android:title="@string/menu_save"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_compose"/>
+    <item android:id="@+id/menu_edit_pills"
+        android:title="@string/menu_edit_pills"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:icon="@drawable/medicin2"/>
+</menu>

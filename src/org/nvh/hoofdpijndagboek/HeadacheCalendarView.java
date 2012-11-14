@@ -28,7 +28,6 @@ import android.view.GestureDetector.OnGestureListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
@@ -65,7 +64,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			// layout
 			View v = inflater.inflate(R.layout.calendar_columns, null);
 			builder.setView(v)
-					.setPositiveButton("OK",
+					.setPositiveButton(getActivity().getString(R.string.dialogOk),
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {
@@ -91,7 +90,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 									HeadacheCalendarView.this.invalidate();
 								}
 							})
-					.setNegativeButton("Cancel",
+					.setNegativeButton(getActivity().getString(R.string.dialogCancel),
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {
@@ -181,7 +180,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 		cc = settings.getInt("calendarColumns", 21);
 		cr = settings.getInt("calendarRows", 21);
 		cell = new Cell(cc, cr);
-		calendarURI = getCalendarUriBase();
+		calendarURI = Utils.getCalendarUriBase(getContext().getContentResolver());
 	}
 
 	private class Cell {
@@ -428,40 +427,6 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 		}
 	}
 
-	/*
-	 * Determines if it's a pre 2.1 or a 2.2 calendar Uri, and returns the Uri
-	 */
-	private String getCalendarUriBase() {
-		String calendarUriBase = null;
-		Uri calendars = Uri.parse("content://calendar/calendars");
-		Cursor managedCursor = null;
-		ContentResolver cr = getContext().getContentResolver();
-		try {
-			managedCursor = cr.query(calendars, null, null, null, null);
-			managedCursor.close();
-		} catch (Exception e) {
-			// eat
-		}
-
-		if (managedCursor != null) {
-			calendarUriBase = "content://calendar/";
-		} else {
-			calendars = Uri.parse("content://com.android.calendar/calendars");
-			try {
-				managedCursor = cr.query(calendars, null, null, null, null);
-				managedCursor.close();
-			} catch (Exception e) {
-				// eat
-			}
-
-			if (managedCursor != null) {
-				calendarUriBase = "content://com.android.calendar/";
-			}
-
-		}
-
-		return calendarUriBase;
-	}
 
 	private int parseDescription(String description, String what,
 			String[] options) {
@@ -515,14 +480,12 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 	@Override
 	public boolean onDown(MotionEvent arg0) {
-		// TODO Auto-generated method stub
 		return true;
 	}
 
 	@Override
 	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 			float velocityY) {
-		// TODO Auto-generated method stub
 		return true;
 	}
 
@@ -533,19 +496,15 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	@Override
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 			float distanceY) {
-		// TODO Auto-generated method stub
 		return true;
 	}
 
 	@Override
 	public void onShowPress(MotionEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public boolean onSingleTapUp(MotionEvent e) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 }

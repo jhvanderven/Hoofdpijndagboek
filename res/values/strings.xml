@@ -22,6 +22,7 @@
     <string name="right">rechts</string>
     <string name="ouch">au</string>
     <string name="calendar_entry_title">Hoofdpijnaanval</string>
+    <string name="calendar_pill_title">Hoofdpijnpil</string>
     <string name="ja">ja</string>
     <string name="event_saved">Deze gebeurtenis is opgeslagen in de agenda.</string>
     <string name="rows">weken horizontaal (rijen)</string>
@@ -55,5 +56,31 @@
         <item>geërgerd</item>
         <item>onbegrepen</item>
         <item>gevoel van onmacht</item>
+    </string-array>
+    <string name="menu_add">Voeg medicijn toe</string>
+    <string name="menu_edit">Bewerk medicijn</string>
+    <string name="menu_delete">Verwijder medicijn</string>
+    <string name="menu_edit_pills">Pillen</string>
+    <string name="menu_save">Sla op</string>
+    <string name="pill_name">Medicijn</string>
+    <string name="pill_number">Aantal</string>
+    <string name="pill_timing">Slikmoment</string>
+    <string name="pill_effect">Effect</string>
+    <string name="short_date_time">dd-MMM-yy</string>
+    <string name="long_date_time">dd-MMM-yy HH:mm</string>
+    <string name="very_long_date_time">yyyy-MM-dd HH:mm</string>
+    <string name="new_pill">nieuw</string>
+    <string name="dialogOk">OK</string>
+    <string name="dialogCancel">Afbreken</string>
+	<string name="pill_new_medicin">Voeg een nieuw medicijn toe</string>
+	<string name="pill_new_message">De werkzame stof van het medicijn of de merknaam, een getal geeft het gehalte in mg van de werkzame stof weer</string>
+	<string name="pill_content_description">Ikoon geeft effect weer</string>
+	<string name="date_parse_error">Er is iets misgegaan met de opgeslagen datum.</string>
+    <string-array name="pill_effect_array">
+        <item>weet niet</item>
+        <item>minder</item>
+        <item>voorbij</item>
+        <item>erger</item>
+        <item>geen</item>
     </string-array>
 </resources>

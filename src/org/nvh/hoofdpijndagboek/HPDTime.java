@@ -29,11 +29,6 @@ public class HPDTime extends SherlockFragmentActivity {
 		setContentView(R.layout.fragment_stack);
 	}
 
-//	@Override
-//	public void onSaveInstanceState(Bundle outState) {
-//		super.onSaveInstanceState(outState);
-//	}
-//
 	public static class TimingFragment extends SherlockFragment {
 		private static View view;
 	
