@@ -63,8 +63,9 @@ public class HPDMedicins extends SherlockFragmentActivity {
 			Calendar endAttack = Calendar.getInstance();
 			endAttack.setTimeInMillis(a.end.getTimeInMillis());
 			// add a window to the pills the user has/will take(n)
-			startAttack.add(Calendar.HOUR_OF_DAY, -12);
-			endAttack.add(Calendar.HOUR_OF_DAY, +12);
+			// this should be a preference and match that of the PillTimeView
+			startAttack.add(Calendar.HOUR_OF_DAY, -24);
+			endAttack.add(Calendar.HOUR_OF_DAY, +24);
 			ContentResolver contentResolver = getActivity()
 					.getContentResolver();
 			Uri.Builder builder = Uri.parse(

@@ -29,6 +29,7 @@
     <string name="columns">weken verticaal (kolommen)</string>
     <string name="months_in_rows">maanden horizontaal</string>
     <string name="title_for_grid">hoeveel weken wil je zien?</string>
+
     <string-array name="lgh_array">
         <item>Laag</item>
         <item>Gemiddeld</item>
@@ -57,6 +58,7 @@
         <item>onbegrepen</item>
         <item>gevoel van onmacht</item>
     </string-array>
+
     <string name="menu_add">Voeg medicijn toe</string>
     <string name="menu_edit">Bewerk medicijn</string>
     <string name="menu_delete">Verwijder medicijn</string>
@@ -71,12 +73,19 @@
     <string name="long_date_time">dd-MMM-yy HH:mm</string>
     <string name="very_long_date_time">yyyy-MM-dd HH:mm</string>
     <string name="new_pill">nieuw</string>
+    <string name="pill_before">%1$.0f %2$s voor de aanval</string>
+    <string name="pill_during">na %1$.0f %2$s tijdens de aanval</string>
+    <string name="pill_after">%1$.0f %2$s na de aanval</string>
+    <string name="pill_days">dagen</string>
+    <string name="pill_hour">uur</string>
+    <string name="pill_minutes">minuten</string>
     <string name="dialogOk">OK</string>
     <string name="dialogCancel">Afbreken</string>
-	<string name="pill_new_medicin">Voeg een nieuw medicijn toe</string>
-	<string name="pill_new_message">De werkzame stof van het medicijn of de merknaam, een getal geeft het gehalte in mg van de werkzame stof weer</string>
-	<string name="pill_content_description">Ikoon geeft effect weer</string>
-	<string name="date_parse_error">Er is iets misgegaan met de opgeslagen datum.</string>
+    <string name="pill_new_medicin">Voeg een nieuw medicijn toe</string>
+    <string name="pill_new_message">De werkzame stof van het medicijn of de merknaam, een getal geeft het gehalte in mg van de werkzame stof weer</string>
+    <string name="pill_content_description">Ikoon geeft effect weer</string>
+    <string name="date_parse_error">Er is iets misgegaan met de opgeslagen datum.</string>
+
     <string-array name="pill_effect_array">
         <item>weet niet</item>
         <item>minder</item>
@@ -84,4 +93,5 @@
         <item>erger</item>
         <item>geen</item>
     </string-array>
+
 </resources>

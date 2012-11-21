@@ -35,6 +35,7 @@ public class MedicinArrayAdapter extends ArrayAdapter<String> {
 		TextView when = (TextView) rowView.findViewById(R.id.pill_when);
 		TextView whenDiff = (TextView) rowView
 				.findViewById(R.id.pill_when_diff);
+		PillTimeView ptv = (PillTimeView) rowView.findViewById(R.id.ptv);
 		name.setText(Utils.parseDescription(values.get(position),
 				this.context.getString(R.string.pill_name)));
 		number.setText(Utils.parseDescription(values.get(position),
@@ -47,35 +48,42 @@ public class MedicinArrayAdapter extends ArrayAdapter<String> {
 		try {
 			d = Utils.parse(pill_time,
 					this.context.getString(R.string.very_long_date_time));
-			when.setText(String.format("%02d:%02d", d.getHours(), d.getMinutes()));
+			ptv.setTimeInMillis(d.getTime());
+			Calendar c = Calendar.getInstance();
+			c.setTimeInMillis(d.getTime());
+			when.setText(String.format("%02d:%02d",
+					c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE)));
 			Calendar s = ((MainActivity) getContext()).getAttack().start;
 			Calendar e = ((MainActivity) getContext()).getAttack().end;
 			long msStart = s.getTimeInMillis();
 			long msPill = d.getTime();
 			long msEnd = e.getTimeInMillis();
 			double diff;
-			String wanneer;
-			if(msPill < msStart){
+			int id;
+			if (msPill < msStart) {
 				diff = msPill - msStart;
-				wanneer = "%.0f %s voor de aanval";
-			}else if (msPill < msEnd) {
+				id = R.string.pill_before;
+			} else if (msPill < msEnd) {
 				diff = msPill - msStart;
-				wanneer = "na %.0f %s gedurende de aanval";
+				id = R.string.pill_during;
 			} else {
 				diff = msEnd - msPill;
-				wanneer = "%.0f %s na de aanval";
+				id = R.string.pill_after;
 			}
-			diff=Math.abs(diff);
+			diff = Math.abs(diff);
 			double diffMinutes = diff / (60 * 1000);
 			double diffHours = diff / (60 * 60 * 1000);
 			double diffDays = diff / (24 * 60 * 60 * 1000);
-			String diffTimeString="";
+			String diffTimeString = "";
 			if (diffDays > 1) {
-				diffTimeString = String.format(wanneer, diffDays, "dagen");
+				diffTimeString = String.format(getContext().getString(id, diffDays,
+						getContext().getString(R.string.pill_days)));
 			} else if (diffHours > 1) {
-				diffTimeString = String.format(wanneer, diffHours, "uur");
+				diffTimeString = String.format(getContext().getString(id, diffHours,
+						getContext().getString(R.string.pill_hour)));
 			} else {
-				diffTimeString = String.format(wanneer, diffMinutes, "min");
+				diffTimeString = String.format(getContext().getString(id, diffMinutes,
+						getContext().getString(R.string.pill_minutes)));
 			}
 			whenDiff.setText(diffTimeString);
 		} catch (ParseException e) {
