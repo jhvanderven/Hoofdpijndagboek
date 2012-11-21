@@ -11,10 +11,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
-import android.widget.Spinner;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
@@ -37,7 +37,7 @@ public class HPDTime extends SherlockFragmentActivity {
 		public static Button endTime;
 		public static Button endDate;
 
-		public static Spinner ernst;
+		public static RadioGroup ernst;
 
 		private static int startDateYear;
 		private static int startDateMonth;
@@ -52,17 +52,28 @@ public class HPDTime extends SherlockFragmentActivity {
 
 		public static String getData() {
 			StringBuilder sb = new StringBuilder();
-			sb.append(view.getContext().getString(R.string.ernst)).append(":")
-					.append(ernst.getSelectedItem().toString()).append("\n");
+			sb.append(view.getContext().getString(R.string.ernst)).append(":");
+			RadioButton b = (RadioButton) view.findViewById(ernst
+					.getCheckedRadioButtonId());
+			sb.append(b.getText()).append("\n");
 			return sb.toString();
 		}
 
-		public static void pleaseUpdate(HeadacheAttack a, String[] lgh){
+		public static void pleaseUpdate(HeadacheAttack a, String[] lgh) {
 			update(a, lgh);
 		}
 
 		private static void update(HeadacheAttack a, String[] lgh) {
-			ernst.setSelection(Utils.getArrayIndex(lgh, a.ernst));
+			int id;
+			if (a.ernst.equalsIgnoreCase(lgh[0])) {
+				id = R.id.laag;
+			} else if (a.ernst.equalsIgnoreCase(lgh[1])) {
+				id = R.id.gemiddeld;
+			} else {
+				id = R.id.hoog;
+			}
+			RadioButton b = (RadioButton) view.findViewById(id);
+			b.setChecked(true);
 			updateTimes(startDate, startTime, a.start.get(Calendar.YEAR),
 					a.start.get(Calendar.MONTH),
 					a.start.get(Calendar.DAY_OF_MONTH),
@@ -71,14 +82,15 @@ public class HPDTime extends SherlockFragmentActivity {
 			updateTimes(endDate, endTime, a.end.get(Calendar.YEAR),
 					a.end.get(Calendar.MONTH),
 					a.end.get(Calendar.DAY_OF_MONTH),
-					a.end.get(Calendar.HOUR_OF_DAY),
-					a.end.get(Calendar.MINUTE));
+					a.end.get(Calendar.HOUR_OF_DAY), a.end.get(Calendar.MINUTE));
 		}
+
 		@Override
 		public void onResume() {
-			HeadacheAttack a = ((MainActivity) getActivity()).getAttack();
-			update(a, getActivity().getResources()
-					.getStringArray(R.array.lgh_array));
+			update(((MainActivity) getActivity()).getAttack(), new String[] {
+					getActivity().getString(R.string.laag),
+					getActivity().getString(R.string.gemiddeld),
+					getActivity().getString(R.string.hoog) });
 			super.onResume();
 		}
 
@@ -87,12 +99,12 @@ public class HPDTime extends SherlockFragmentActivity {
 				Bundle savedInstanceState) {
 			View v = inflater.inflate(R.layout.time_layout, container, false);
 			v.setTag(R.layout.time_layout);
-			ernst = (Spinner) v.findViewById(R.id.spinnerErnst);
-			ArrayAdapter<CharSequence> adapter = ArrayAdapter
-					.createFromResource(getActivity(), R.array.lgh_array,
-							android.R.layout.simple_spinner_item);
-			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			ernst.setAdapter(adapter);
+			ernst = (RadioGroup) v.findViewById(R.id.ernst);
+			// ArrayAdapter<CharSequence> adapter = ArrayAdapter
+			// .createFromResource(getActivity(), R.array.lgh_array,
+			// android.R.layout.simple_spinner_item);
+			// adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			// ernst.setAdapter(adapter);
 
 			final Calendar c = Calendar.getInstance();
 			c.add(Calendar.HOUR, -5);

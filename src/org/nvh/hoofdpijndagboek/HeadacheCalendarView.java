@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentResolver;
@@ -26,6 +27,7 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.LayoutInflater;
@@ -174,8 +176,9 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	Rect rect = new Rect(); // lint says to create up front and reuse
 	Rect bounds = new Rect();
 	Cell cell = new Cell(cc, cr);
-	HashMap<Long, List<Integer>> nEvents = new HashMap<Long, List<Integer>>();
+	HashMap<Long, List<CalendarEvent>> calendarEvents = new HashMap<Long, List<CalendarEvent>>();
 	String calendarURI = null;
+	private int renderingMode;
 
 	public HeadacheCalendarView(Context context) {
 		super(context);
@@ -198,6 +201,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 		calendarURI = Utils.getCalendarUriBase(getContext()
 				.getContentResolver());
 		gesturedetector = new GestureDetector(this.getContext(), this);
+		renderingMode = 1;
 	}
 
 	private class Cell {
@@ -269,6 +273,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 	}
 
+	@SuppressLint("DrawAllocation")
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
@@ -277,7 +282,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 		p.setColor(Color.BLACK);
 		p.setStyle(Style.FILL);
 		canvas.drawPaint(p);
-
+		renderingMode = 1;
 		// TODO: Center the control horizontally...
 
 		// this is going to be a view that can handle the past year
@@ -293,6 +298,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 				canvas.drawLine(0, (int) j, xend, (int) j, p);
 			}
 		}
+		p.setTextSize(Math.min(ystep - 5, xstep - 2));
 
 		// bottom-right is today
 		// highlight(canvas, xstep, ystep, Calendar.MONDAY, Color.CYAN, false);
@@ -314,7 +320,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 		// }
 
 		ContentResolver contentResolver = getContext().getContentResolver();
-		nEvents.clear();
+		calendarEvents.clear();
 		Calendar cal = Calendar.getInstance();
 		// TODO: I wonder if this works for all phone makers... I read that some
 		// replaced the calendar with something of their own.
@@ -331,67 +337,133 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 						"allDay", "description" }, null, null,
 						"startDay ASC, startMinute ASC");
 		if (eventCursor.getCount() > 0) {
-			String[] lgh = getResources().getStringArray(R.array.lgh_array);
+			String[] lgh = new String[] {
+					getContext().getString(R.string.laag),
+					getContext().getString(R.string.gemiddeld),
+					getContext().getString(R.string.hoog) };
 
 			// read in all events and store in a hash by date
 			while (eventCursor.moveToNext()) {
-				Calendar begin = Calendar.getInstance();
-				begin.setTimeInMillis(eventCursor.getLong(1));
-				Calendar end = Calendar.getInstance();
-				end.setTimeInMillis(eventCursor.getLong(2));
-				String description = eventCursor.getString(4);
-				Calendar date = (Calendar) begin.clone();
+				CalendarEvent event = new CalendarEvent();
+				event.start = Calendar.getInstance();
+				event.start.setTimeInMillis(eventCursor.getLong(1));
+				event.end = Calendar.getInstance();
+				event.end.setTimeInMillis(eventCursor.getLong(2));
+				event.text = eventCursor.getString(4);
+				Calendar date = (Calendar) event.start.clone();
 				date.set(Calendar.HOUR_OF_DAY, 0);
 				date.set(Calendar.MINUTE, 0);
 				date.set(Calendar.SECOND, 0);
 				date.set(Calendar.MILLISECOND, 0);
-				String title = eventCursor.getString(0);
-				setColor(lgh, description, title);
+				event.title = eventCursor.getString(0);
+				setColor(lgh, event.text, event.title);
+				event.color = p.getColor();
 				// handle events that last multiple days
 				do {
-					List<Integer> c = nEvents.get(date.getTimeInMillis());
+					List<CalendarEvent> c = calendarEvents.get(date
+							.getTimeInMillis());
 					if (c == null) {
-						c = new ArrayList<Integer>();
+						c = new ArrayList<CalendarEvent>();
 					}
-					c.add(p.getColor());
-					nEvents.put(date.getTimeInMillis(), c);
+					c.add(event);
+					calendarEvents.put(date.getTimeInMillis(), c);
 					date.add(Calendar.DAY_OF_MONTH, 1);
-				} while (date.before(end));
+				} while (date.before(event.end));
 			}
 
 			// show the events as coloured rects in the grid
-			for (Long millis : nEvents.keySet()) {
+			int width, eventCount, pillCount;
+			for (Long millis : calendarEvents.keySet()) {
 				Calendar d = Calendar.getInstance();
 				d.setTimeInMillis(millis);
 				cell.get(d);
-				int width = (int) ((float) (xstep - 2) / nEvents.get(millis)
-						.size());
-				int event = 0;
-				for (Integer color : nEvents.get(millis)) {
-					p.setColor(color);
-					rect.left = cell.i * xstep + 1 + ((event > 0) ? 1 : 0)
-							+ event * width;
-					rect.top = cell.j * ystep + 1;
-//					if (event != (nEvents.get(millis).size() - 1)) {
-						rect.right = rect.left + width - 1;
-//					} else {
-//						// fix rounding errors by extending last rect
-//						rect.right = cell.i * xstep + xstep;
-//					}
-					rect.bottom = rect.top + ystep - 1;
-					canvas.drawRect(rect, p);
-//					if (event != (nEvents.get(millis).size() - 1)) {
-//						p.setColor(Color.BLACK);
-//						canvas.drawLine(rect.right + 1, rect.top,
-//								rect.right + 1, rect.bottom, p);
-//					}
-					event++;
+				if (renderingMode == 0) {
+					width = (int) ((float) (xstep - 2) / calendarEvents.get(
+							millis).size());
+					eventCount = 0;
+					for (CalendarEvent event : calendarEvents.get(millis)) {
+						p.setColor(event.color);
+						p.setAlpha(255);
+						rect.left = cell.i * xstep + 3
+								+ ((eventCount > 0) ? 1 : 0) + eventCount
+								* width;
+						rect.top = cell.j * ystep + 5;
+						rect.right = rect.left + width - 6;
+						rect.bottom = rect.top + ystep - 10;
+						canvas.drawRect(rect, p);
+						eventCount++;
+					}
+				} else if (renderingMode == 1 || renderingMode == 2) {
+					// we do nearly the same but use a number for the pills
+					eventCount = 0;
+					pillCount = 0;
+					for (CalendarEvent event : calendarEvents.get(millis)) {
+						if (event.title.equalsIgnoreCase(getContext().getString(
+								R.string.calendar_pill_title))) {
+							pillCount++;
+						} else {
+							eventCount++;
+						}
+					}
+					if (renderingMode == 1) {
+						width = (int) ((float) (xstep - 2) / eventCount);
+						eventCount = 0;
+						for (CalendarEvent event : calendarEvents.get(millis)) {
+							if (!event.title.equalsIgnoreCase(getContext().getString(
+									R.string.calendar_pill_title))) {
+								p.setColor(event.color);
+								p.setAlpha(255);
+								rect.left = cell.i * xstep + 3
+										+ ((eventCount > 0) ? 1 : 0)
+										+ eventCount * width;
+								rect.top = cell.j * ystep + 5;
+								rect.right = rect.left + width - 6;
+								rect.bottom = rect.top + ystep - 10;
+								canvas.drawRect(rect, p);
+								eventCount++;
+							}
+						}
+					} else {
+						// we try to show smaller rectangles at the correct time
+						// using transparency we handle overlaps
+						// I am not for this, they are too small, and
+						// if we keep them from overlapping (later) they
+						// will only get smaller.
+						width = xstep - 2;
+						for (CalendarEvent event : calendarEvents.get(millis)) {
+							if (!event.title.equalsIgnoreCase(getContext().getString(
+									R.string.calendar_pill_title))) {
+								p.setColor(event.color);
+								p.setAlpha(128);
+								rect.left = cell.i * xstep + 3;
+								rect.right = rect.left + width - 6;
+								rect.top = cell.j
+										* ystep
+										+ 5
+										+ getYPosition(ystep - 10,
+												event.start.getTimeInMillis(),
+												millis);
+								rect.bottom = cell.j
+										* ystep
+										+ 5
+										+ getYPosition(ystep - 10,
+												event.end.getTimeInMillis(),
+												millis);
+								canvas.drawRect(rect, p);
+							}
+						}
+					}
+					if (pillCount > 0) {
+						p.setColor(Color.WHITE);
+						p.setAlpha(128);
+						String s = Integer.valueOf(pillCount).toString();
+						drawText(canvas, xstep, ystep, s);
+					}
 				}
 			}
 			eventCursor.close();
 
 			// mark beginnings of month, I want these on top.
-			p.setTextSize(Math.min(ystep - 5, xstep - 2));
 			Calendar first = Calendar.getInstance();
 			first.set(Calendar.DAY_OF_MONTH, 1);
 			// mark first of the month
@@ -400,10 +472,10 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 				// fill the cell with ltgray
 				p.setColor(Color.LTGRAY);
-				rect.left = cell.i * xstep + 1;
-				rect.top = cell.j * ystep;
-				rect.right = rect.left + xstep - 1;
-				rect.bottom = rect.top + ystep;
+				rect.left = cell.i * xstep + 3;
+				rect.top = cell.j * ystep + 5;
+				rect.right = rect.left + xstep - 6;
+				rect.bottom = rect.top + ystep - 10;
 				canvas.drawRect(rect, p);
 
 				if (first.get(Calendar.MONTH) == Calendar.JANUARY) {
@@ -413,24 +485,45 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 					// a red top
 					p.setColor(Color.RED);
 				}
-				rect.bottom = rect.top + ystep / 5;
+				rect.bottom = rect.top + ystep / 10;
 				canvas.drawRect(rect, p);
 
 				// the name or number of the month
 				p.setColor(Color.BLACK);
 				String s = f.format(first.getTime());
-				p.getTextBounds(s, 0, s.length(), bounds);
-				canvas.drawText(s, cell.i * xstep + (xstep - bounds.width())
-						/ 2 -3, (cell.j) * ystep + ystep - 5, p);
+				drawText(canvas, xstep, ystep, s);
 				first.add(Calendar.MONTH, -1);
 			}
 		}
 	}
 
+	private int getYPosition(int heightOfCellInPixels, long timeInMillis,
+			long calendarCellInMillis) {
+		if (timeInMillis < calendarCellInMillis) {
+			// multiple day event started earlier
+			return 0;
+		}
+		if (timeInMillis >= (calendarCellInMillis + 24 * 60 * 60 * 1000)) {
+			// multiple day event continues on next day
+			return heightOfCellInPixels;
+		}
+		float y = (float) heightOfCellInPixels
+				* (timeInMillis - calendarCellInMillis) / (24 * 60 * 60 * 1000);
+		return (int) y;
+	}
+
+	private void drawText(Canvas canvas, int xstep, int ystep, String s) {
+		p.getTextBounds(s, 0, s.length(), bounds);
+		canvas.drawText(s, cell.i * xstep + (xstep - bounds.width()) / 2,
+				(cell.j) * ystep + ystep - (ystep - bounds.height()) / 2, p);
+	}
+
 	private void setColor(String[] lgh, String description, String title) {
-		if (title.equals(getContext().getString(R.string.calendar_entry_title))) {
-			int ernst = parseDescription(description,
-					getContext().getString(R.string.ernst), lgh);
+		if (title.equalsIgnoreCase(getContext().getString(R.string.calendar_entry_title))) {
+			int ernst = Utils.getArrayIndex(
+					lgh,
+					Utils.parseDescription(description,
+							getContext().getString(R.string.ernst)));
 			if (ernst == 0) {
 				p.setColor(Color.MAGENTA);
 			} else if (ernst == 1) {
@@ -438,37 +531,12 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			} else if (ernst == 2) {
 				p.setColor(Color.RED);
 			}
-		} else if (title.equals(getContext().getString(R.string.calendar_pill_title))){
+		} else if (title.equalsIgnoreCase(getContext().getString(
+				R.string.calendar_pill_title))) {
 			p.setColor(Color.WHITE);
 		} else {
 			p.setColor(Color.LTGRAY);
 		}
-	}
-
-	private int parseDescription(String description, String what,
-			String[] options) {
-		if (description == null)
-			return 0;
-		if (description.contains(what)) {
-			// find the entry and its :
-			int p1 = description.indexOf(what) + what.length() + 1;
-			int p2 = description.indexOf('\n', p1);
-			String answer = null;
-			if (p2 == -1) {
-				answer = description.substring(p1);
-			} else {
-				answer = description.substring(p1, p2);
-			}
-			int i = 0;
-			for (String option : options) {
-				if (answer.equals(option)) {
-					return i;
-				}
-				i++;
-			}
-			return 0;
-		}
-		return 0;
 	}
 
 	//
@@ -497,13 +565,15 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 	@Override
 	public boolean onDown(MotionEvent e) {
+		Log.i("hcv", "Down from calendar");
 		return true;
 	}
 
 	@Override
 	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 			float velocityY) {
-		return true;
+		Log.i("hcv", "Fling from calendar");
+		return false;
 	}
 
 	@Override
@@ -521,7 +591,8 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	@Override
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 			float distanceY) {
-		return true;
+		Log.i("hcv", "Scroll from calendar");
+		return false;
 	}
 
 	@Override
@@ -546,30 +617,53 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			// v.vibrate(50);
 			HeadacheCalendarView.this
 					.playSoundEffect(SoundEffectConstants.CLICK);
-			HeadacheAttack attack = ((MainActivity)getContext()).getAttack();
+			HeadacheAttack attack = ((MainActivity) getContext()).getAttack();
 			String description = hits.get(0);
+
+			// this should go into utils
 			attack.start = handleDateAndTime(description, "begin");
 			attack.end = handleDateAndTime(description, "end");
-			attack.ernst=Utils.parseDescription(description, getContext().getString(R.string.ernst));
-			attack.leftPainPoints = Utils.parseDescriptionOuch(
-					 description, getContext().getString(R.string.left),
-					 getContext().getString(R.string.ouch));
+			attack.ernst = Utils.parseDescription(description, getContext()
+					.getString(R.string.ernst));
+			attack.leftPainPoints = Utils.parseDescriptionOuch(description,
+					getContext().getString(R.string.left), getContext()
+							.getString(R.string.ouch));
 			attack.rightPainPoints = Utils.parseDescriptionOuch(description,
 					getContext().getString(R.string.right), getContext()
 							.getString(R.string.ouch));
-			attack.misselijk = Utils.parseDescription(description, getContext().getString(R.string.misselijk)).equals(getContext().getString(R.string.ja));
-			attack.menstruatie = Utils.parseDescription(description, getContext().getString(R.string.menstruatie)).equals(getContext().getString(R.string.ja));
-			attack.doorslapen = Utils.parseDescription(description, getContext().getString(R.string.doorslapen)).equals(getContext().getString(R.string.ja));
-			attack.duizelig = Utils.parseDescription(description, getContext().getString(R.string.duizelig)).equals(getContext().getString(R.string.ja));
-			attack.geur = Utils.parseDescription(description, getContext().getString(R.string.geur)).equals(getContext().getString(R.string.ja));
-			attack.inslapen = Utils.parseDescription(description, getContext().getString(R.string.inslapen)).equals(getContext().getString(R.string.ja));
-			attack.licht = Utils.parseDescription(description, getContext().getString(R.string.licht)).equals(getContext().getString(R.string.ja));
-			attack.stoelgang = Utils.parseDescription(description, getContext().getString(R.string.stoelgang)).equals(getContext().getString(R.string.ja));
-			attack.humeur=Utils.parseDescription(description, getContext().getString(R.string.humeur));
-			attack.weer=Utils.parseDescription(description, getContext().getString(R.string.weer));
-			((MainActivity)getContext()).setWorkingOnNewHeadache(false);
-			((MainActivity)getContext()).repaintTabs();
+			attack.misselijk = Utils.parseDescription(description,
+					getContext().getString(R.string.misselijk)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.menstruatie = Utils.parseDescription(description,
+					getContext().getString(R.string.menstruatie)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.doorslapen = Utils.parseDescription(description,
+					getContext().getString(R.string.doorslapen)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.duizelig = Utils.parseDescription(description,
+					getContext().getString(R.string.duizelig)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.geur = Utils.parseDescription(description,
+					getContext().getString(R.string.geur)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.inslapen = Utils.parseDescription(description,
+					getContext().getString(R.string.inslapen)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.licht = Utils.parseDescription(description,
+					getContext().getString(R.string.licht)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.stoelgang = Utils.parseDescription(description,
+					getContext().getString(R.string.stoelgang)).equalsIgnoreCase(
+					getContext().getString(R.string.ja));
+			attack.humeur = Utils.parseDescription(description, getContext()
+					.getString(R.string.humeur));
+			attack.weer = Utils.parseDescription(description, getContext()
+					.getString(R.string.weer));
+			((MainActivity) getContext()).setWorkingOnNewHeadache(false);
+			((MainActivity) getContext()).repaintTabs();
 		}
+
+		// TODO: Handle multiple hits by showing a list
 		return true;
 	}
 

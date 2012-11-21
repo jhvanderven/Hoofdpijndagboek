@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-	Lessons learned: Put this inside a scrollview and Android never knows
-    the height of your last control. 
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -12,12 +8,6 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
-
-        <!-- TextView
-            android:id="@+id/startDateTime"
-            android:layout_width="0px"
-            android:layout_height="wrap_content"
-            android:layout_weight="3" /-->
 
         <Button
             android:id="@+id/startDate"
@@ -39,12 +29,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
 
-        <!-- TextView
-            android:id="@+id/endDateTime"
-            android:layout_width="0px"
-            android:layout_height="wrap_content"
-            android:layout_weight="3" /-->
-
         <Button
             android:id="@+id/endDate"
             android:layout_width="0px"
@@ -60,21 +44,33 @@
             android:text="@string/pick_time" />
     </LinearLayout>
 
-    <LinearLayout
+    <RadioGroup
+        android:id="@+id/ernst"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
 
-        <TextView
+        <RadioButton
+            android:id="@+id/laag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/ernst" />
+            android:checked="true"
+            android:text="@string/laag" />
 
-        <Spinner
-            android:id="@+id/spinnerErnst"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
+        <RadioButton
+            android:id="@+id/gemiddeld"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="@string/gemiddeld" />
+
+        <RadioButton
+            android:id="@+id/hoog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="@string/hoog" />
+    </RadioGroup>
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -92,6 +88,6 @@
             android:layout_width="match_parent"
             android:layout_height="0dip"
             android:layout_weight="15" />
-        </LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>

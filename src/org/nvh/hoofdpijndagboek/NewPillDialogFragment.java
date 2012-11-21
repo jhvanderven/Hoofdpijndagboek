@@ -94,7 +94,7 @@ public class NewPillDialogFragment extends DialogFragment {
 				Spinner spinner = (Spinner) arg0
 						.findViewById(R.id.spinner_pill_name);
 				String choice = spinner.getSelectedItem().toString();
-				if (choice.equals(getString(R.string.new_pill))) {
+				if (choice.equalsIgnoreCase(getString(R.string.new_pill))) {
 					// user must enter a new pill
 					AlertDialog.Builder alert = new AlertDialog.Builder(
 							getActivity());
@@ -147,7 +147,7 @@ public class NewPillDialogFragment extends DialogFragment {
 		for (String p : pillNames) {
 			spinnerArrayAdapter.add(p);
 			if (b != null) {
-				if (p.equals(b.getString("medicin"))) {
+				if (p.equalsIgnoreCase(b.getString("medicin"))) {
 					selectedPos = position;
 				}
 				position++;
@@ -178,7 +178,7 @@ public class NewPillDialogFragment extends DialogFragment {
 						Toast.LENGTH_SHORT).show();
 			}
 		} else {
-			if (spinnerArrayAdapter.getItem(0).equals(
+			if (spinnerArrayAdapter.getItem(0).equalsIgnoreCase(
 					getActivity().getString(R.string.new_pill))) {
 				pills.setSelection(spinnerArrayAdapter.getCount() - 1);
 			} else {

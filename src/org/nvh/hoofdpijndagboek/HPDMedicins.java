@@ -79,7 +79,7 @@ public class HPDMedicins extends SherlockFragmentActivity {
 			if (eventCursor.getCount() > 0) {
 				while (eventCursor.moveToNext()) {
 					String title = eventCursor.getString(0);
-					if (title.equals(getString(R.string.calendar_pill_title))) {
+					if (title.equalsIgnoreCase(getString(R.string.calendar_pill_title))) {
 						items.add(eventCursor.getString(2)
 								+ getString(R.string.pill_timing)
 								+ ":"

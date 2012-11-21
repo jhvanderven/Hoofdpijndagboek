@@ -19,13 +19,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.CalendarContract;
-import android.provider.CalendarContract.Events;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TabHost;
@@ -148,7 +145,7 @@ public class MainActivity extends SherlockFragmentActivity {
 		a.leftPainPoints = new ArrayList<PainPoint>();
 		a.rightPainPoints = new ArrayList<PainPoint>();
 		a.misselijk = false;
-		a.ernst = getResources().getStringArray(R.array.lgh_array)[0];
+		a.ernst = getString(R.string.laag);
 	}
 
 	protected void makeUseOfNewLocation(Location location) {
@@ -241,8 +238,6 @@ public class MainActivity extends SherlockFragmentActivity {
 				return true;
 			}
 			StringBuilder message = new StringBuilder();
-			int ernstOnHead = 0;
-			int ernstBijdrage = 0;
 			try {
 				message.append(HPDTime.TimingFragment.getData());
 			} catch (Exception e) {
@@ -258,11 +253,6 @@ public class MainActivity extends SherlockFragmentActivity {
 					.append(getString(R.string.ouch)).append("\n");
 			try {
 				message.append(HPDHeadLeft.HurtingFragmentLeft.getData());
-				int leftErnst = HPDHeadLeft.HurtingFragmentLeft.getErnst();
-				if (leftErnst > 0) {
-					ernstBijdrage++;
-					ernstOnHead += leftErnst;
-				}
 			} catch (Exception e) {
 			} finally {
 			}
@@ -270,22 +260,10 @@ public class MainActivity extends SherlockFragmentActivity {
 					.append(getString(R.string.ouch)).append("\n");
 			try {
 				message.append(HPDHeadRight.HurtingFragmentRight.getData());
-				int rightErnst = HPDHeadRight.HurtingFragmentRight.getErnst();
-				if (rightErnst > 0) {
-					ernstBijdrage++;
-					ernstOnHead += rightErnst;
-				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 			}
-			message.append(getString(R.string.ernst))
-					.append(":")
-					.append(getResources().getStringArray(R.array.lgh_array)[(int) Math
-							.max(0,
-									Math.round(ernstOnHead
-											/ (float) ernstBijdrage) - 1)])
-					.append("\n");
 			// TODO: Check for duplicates. Repeatedly hitting the save
 			// button inserts events.
 			ContentResolver cr = getContentResolver();
@@ -320,8 +298,10 @@ public class MainActivity extends SherlockFragmentActivity {
 	}
 
 	public void repaintTabs() {
-		HPDTime.TimingFragment.pleaseUpdate(getAttack(), getResources()
-				.getStringArray(R.array.lgh_array));
+		HPDTime.TimingFragment.pleaseUpdate(getAttack(),new String[] {
+			getString(R.string.laag),
+			getString(R.string.gemiddeld),
+			getString(R.string.hoog) });
 		HPDDetails.SymptomsFragment.pleaseUpdate(getAttack(), getResources()
 				.getStringArray(R.array.weather_array), getResources()
 				.getStringArray(R.array.humeur_array));
@@ -424,7 +404,6 @@ public class MainActivity extends SherlockFragmentActivity {
 			View v = mViewPager.getChildAt(position);
 			if (v == null)
 				return;
-			Log.i("chips", v.getClass().getName());
 		}
 
 		@Override

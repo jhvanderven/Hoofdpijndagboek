@@ -63,7 +63,7 @@ public class Utils {
 				.commit();
 		int counter = 1;
 		for (String s : pills) {
-			if (!s.equals(activity.getString(R.string.new_pill))) {
+			if (!s.equalsIgnoreCase(activity.getString(R.string.new_pill))) {
 				String key = String.format("pill%d", counter);
 				prefs.edit().putString(key, s).commit();
 				counter++;
@@ -91,7 +91,7 @@ public class Utils {
 
 	public static int getArrayIndex(String[] stringArray, String string) {
 		int i = 0;
-		while (!stringArray[i].equals(string)) {
+		while (!stringArray[i].equalsIgnoreCase(string)) {
 			i++;
 			if (i >= stringArray.length) {
 				return -1;
@@ -126,7 +126,7 @@ public class Utils {
 		long id = 0;
 		if (eventCursor.getCount() > 0) {
 			while (eventCursor.moveToNext()) {
-				if (eventCursor.getString(0).equals(title)
+				if (eventCursor.getString(0).equalsIgnoreCase(title)
 						&& when.getTime() == eventCursor.getLong(1)) {
 					id = eventCursor.getLong(2);
 				}
@@ -196,7 +196,7 @@ public class Utils {
 		if (eventCursor.getCount() > 0) {
 			Calendar c = Calendar.getInstance();
 			while (eventCursor.moveToNext()) {
-				if (eventCursor.getString(0).equals(title)) {
+				if (eventCursor.getString(0).equalsIgnoreCase(title)) {
 					// Is the begin within one of the days?
 					// then put in the result.
 					Calendar event = Calendar.getInstance();

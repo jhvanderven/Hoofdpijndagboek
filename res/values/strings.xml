@@ -29,12 +29,9 @@
     <string name="columns">weken verticaal (kolommen)</string>
     <string name="months_in_rows">maanden horizontaal</string>
     <string name="title_for_grid">hoeveel weken wil je zien?</string>
-
-    <string-array name="lgh_array">
-        <item>Laag</item>
-        <item>Gemiddeld</item>
-        <item>Hoog</item>
-    </string-array>
+	<string name="laag">laag</string>
+	<string name="gemiddeld">gemiddeld</string>
+	<string name="hoog">hoog</string>
     <string-array name="weather_array">
         <item>sneeuw</item>
         <item>zeer koud</item>
