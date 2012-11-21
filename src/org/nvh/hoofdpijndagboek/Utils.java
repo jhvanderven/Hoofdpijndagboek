@@ -19,7 +19,7 @@ import android.util.Log;
 
 public class Utils {
 	public static final String PREFS_NAME = "PillsFile";
-	
+
 	public static List<String> getPills(FragmentActivity activity) {
 		SharedPreferences prefs = activity.getSharedPreferences(
 				Utils.PREFS_NAME, 0);
@@ -173,5 +173,104 @@ public class Utils {
 		}
 
 		return calendarUriBase;
+	}
+
+	public static List<String> getEvents(String title, Calendar[] days,
+			ContentResolver contentResolver) {
+		List<String> result = new ArrayList<String>();
+		// TODO: find the min and max days from the days array
+		// TODO: for events spanning multiple days check if the days are in it.
+		Calendar min = (Calendar) days[0].clone();
+		Calendar max = (Calendar) days[0].clone();
+		min.add(Calendar.DAY_OF_MONTH, -1);
+		max.add(Calendar.DAY_OF_MONTH, 1);
+		Uri.Builder builder = Uri.parse(
+				Utils.getCalendarUriBase(contentResolver) + "instances/when/")
+				.buildUpon();
+		ContentUris.appendId(builder, min.getTimeInMillis());
+		ContentUris.appendId(builder, max.getTimeInMillis());
+
+		Cursor eventCursor = contentResolver.query(builder.build(),
+				new String[] { "title", "begin", "end", "description" }, null,
+				null, "startDay ASC, startMinute ASC");
+		if (eventCursor.getCount() > 0) {
+			Calendar c = Calendar.getInstance();
+			while (eventCursor.moveToNext()) {
+				if (eventCursor.getString(0).equals(title)) {
+					// Is the begin within one of the days?
+					// then put in the result.
+					Calendar event = Calendar.getInstance();
+					event.setTimeInMillis(eventCursor.getLong(1));
+					if (happensIn(days, event)) {
+						String description = eventCursor.getString(3);
+						if(!description.endsWith("\n")){
+							description+="\n";// my phone will not save this whitespace
+						}
+						c.setTimeInMillis(eventCursor.getLong(1));
+						description += "begin:" + Utils.format(c) + "\n";
+						c.setTimeInMillis(eventCursor.getLong(2));
+						description += "end:" + Utils.format(c);
+						result.add(description);
+					}
+				}
+			}
+			eventCursor.close();
+		}
+		return result;
+	}
+
+	private static String format(Calendar c) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		return sdf.format(c.getTime());
+	}
+
+	private static boolean happensIn(Calendar[] days, Calendar event) {
+		Calendar dayOnly = Calendar.getInstance();
+		for (Calendar day : days) {
+			dayOnly.set(day.get(Calendar.YEAR), day.get(Calendar.MONTH),
+					day.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+			Calendar nextDay = (Calendar) dayOnly.clone();
+			nextDay.add(Calendar.DAY_OF_MONTH, 1);
+			if (event.after(dayOnly) && event.before(nextDay)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static List<PainPoint> parseDescriptionOuch(String description,
+			String side, String ouch) {
+		if (description == null)
+			return null;
+		if (description.contains(side)) {
+			// find the newline and read until
+			// the string does not start with ouch
+			int p1 = description.indexOf(side) + side.length() + 1;
+			int p2 = description.indexOf('\n', p1);
+			if (p2 == -1) {
+				// no pain on this side
+				return new ArrayList<PainPoint>(0);
+			} else {
+				List<PainPoint> points = new ArrayList<PainPoint>();
+				String pain = "", split;
+				do {
+					p1 = description.indexOf('\n', p2 + 1);
+					pain = description.substring(p2 + 1, p1);
+					p2 = p1;
+					if (pain.startsWith(ouch)) {
+						p1 = pain.indexOf(':');
+						split = pain.substring(p1 + 1);
+						String[] splitted = split.split(";");
+						PainPoint p = new PainPoint();
+						p.x = Float.parseFloat(splitted[0]);
+						p.y = Float.parseFloat(splitted[1]);
+						p.color = Integer.parseInt(splitted[2]);
+						points.add(p);
+					}
+				} while (pain.startsWith(ouch));
+				return points;
+			}
+		}
+		return null;
 	}
 }

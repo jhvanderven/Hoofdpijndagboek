@@ -62,6 +62,7 @@
     <string name="menu_delete">Verwijder medicijn</string>
     <string name="menu_edit_pills">Pillen</string>
     <string name="menu_save">Sla op</string>
+    <string name="menu_new">Nieuw</string>
     <string name="pill_name">Medicijn</string>
     <string name="pill_number">Aantal</string>
     <string name="pill_timing">Slikmoment</string>

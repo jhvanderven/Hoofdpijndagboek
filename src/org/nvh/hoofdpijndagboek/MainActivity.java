@@ -2,10 +2,8 @@ package org.nvh.hoofdpijndagboek;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -27,6 +25,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TabHost;
@@ -34,6 +33,7 @@ import android.widget.TabWidget;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
 public class MainActivity extends SherlockFragmentActivity {
@@ -47,11 +47,33 @@ public class MainActivity extends SherlockFragmentActivity {
 	Address here = null;
 	int geoCodeExceptionCounter = 0;
 
+	private HeadacheAttack attack = null;
+
+	private boolean newHeadache;
+
+	public HeadacheAttack getAttack() {
+		if (attack == null) {
+			attack = new HeadacheAttack();
+		}
+		return attack;
+	}
+
+	public List<PainPoint> getPainPoints(int side) {
+		if (side == 0) {
+			return getAttack().leftPainPoints;
+		} else {
+			return getAttack().rightPainPoints;
+		}
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		setTheme(MainActivity.THEME); // Used for theme switching in samples
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		initializeAttack();
+		newHeadache = true; // we start out so the user can enter new headache
+							// directly
 		mTabHost = (TabHost) findViewById(android.R.id.tabhost);
 		mTabHost.setup();
 
@@ -59,33 +81,24 @@ public class MainActivity extends SherlockFragmentActivity {
 
 		mTabsAdapter = new TabsAdapter(this, mTabHost, mViewPager);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Wanneer").setIndicator(
-						"",
+				mTabHost.newTabSpec("Wanneer").setIndicator("",
 						getResources().getDrawable(R.drawable.calendar)),
 				HPDTime.TimingFragment.class, null);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Waar").setIndicator(
-						"",
-						getResources().getDrawable(
-								R.drawable.righthead)),
+				mTabHost.newTabSpec("Waar").setIndicator("",
+						getResources().getDrawable(R.drawable.righthead)),
 				HPDHeadLeft.HurtingFragmentLeft.class, null);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Raaw").setIndicator(
-						"",
-						getResources().getDrawable(
-								R.drawable.lefthead)),
+				mTabHost.newTabSpec("Raaw").setIndicator("",
+						getResources().getDrawable(R.drawable.lefthead)),
 				HPDHeadRight.HurtingFragmentRight.class, null);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Medicijnen").setIndicator(
-						"",
-						getResources().getDrawable(
-								R.drawable.medicin2)),
+				mTabHost.newTabSpec("Medicijnen").setIndicator("",
+						getResources().getDrawable(R.drawable.medicin2)),
 				HPDMedicins.ArrayListFragment.class, null);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Symptomen").setIndicator(
-						"",
-						getResources().getDrawable(
-								R.drawable.symptoms)),
+				mTabHost.newTabSpec("Symptomen").setIndicator("",
+						getResources().getDrawable(R.drawable.symptoms)),
 				HPDDetails.SymptomsFragment.class, null);
 
 		if (savedInstanceState != null) {
@@ -122,6 +135,20 @@ public class MainActivity extends SherlockFragmentActivity {
 
 		whereIsPhone = locationManager
 				.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+	}
+
+	private void initializeAttack() {
+		HeadacheAttack a = getAttack();
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.HOUR, -5);
+		c.set(Calendar.MINUTE, 0);
+		a.start = c;
+		a.end = (Calendar) c.clone();
+		a.end.add(Calendar.HOUR_OF_DAY, 4);
+		a.leftPainPoints = new ArrayList<PainPoint>();
+		a.rightPainPoints = new ArrayList<PainPoint>();
+		a.misselijk = false;
+		a.ernst = getResources().getStringArray(R.array.lgh_array)[0];
 	}
 
 	protected void makeUseOfNewLocation(Location location) {
@@ -167,6 +194,13 @@ public class MainActivity extends SherlockFragmentActivity {
 	}
 
 	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		menu.findItem(R.id.menu_save_headache).setVisible(newHeadache);
+		menu.findItem(R.id.menu_new_headache).setVisible(!newHeadache);
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// we have to gather the information from all the tabs and
 		// create one or more (medication) entries in the calendar
@@ -174,17 +208,36 @@ public class MainActivity extends SherlockFragmentActivity {
 		case R.id.menu_edit_pills:
 			startActivity(new Intent(this, EditPillsActivity.class));
 			return true;
-		case R.id.menu_save:
-			String startDateTime = HPDTime.TimingFragment.startDateTime
-					.getText().toString();
-			Calendar start = parseIsoDate(startDateTime);
-			if (start == null) {
+		case R.id.menu_new_headache:
+			newHeadache = true;
+			initializeAttack();
+			// repaint current screen
+			repaintTabs();
+			invalidateOptionsMenu();
+			return true;
+		case R.id.menu_save_headache:
+			String startDate = HPDTime.TimingFragment.startDate.getText()
+					.toString();
+			String startTime = HPDTime.TimingFragment.startTime.getText()
+					.toString();
+			String startDateTime = String.format("%s %s", startDate, startTime);
+			Calendar start = Calendar.getInstance();
+			try {
+				start.setTimeInMillis(Utils.parse(startDateTime,
+						"yyyy-MM-dd HH:mm").getTime());
+			} catch (ParseException e1) {
 				return true;
 			}
-			String endDateTime = HPDTime.TimingFragment.endDateTime.getText()
+			String endDate = HPDTime.TimingFragment.endDate.getText()
 					.toString();
-			Calendar stop = parseIsoDate(endDateTime);
-			if (stop == null) {
+			String endTime = HPDTime.TimingFragment.endTime.getText()
+					.toString();
+			String endDateTime = String.format("%s %s", endDate, endTime);
+			Calendar stop = Calendar.getInstance();
+			try {
+				stop.setTimeInMillis(Utils.parse(endDateTime,
+						"yyyy-MM-dd HH:mm").getTime());
+			} catch (ParseException e1) {
 				return true;
 			}
 			StringBuilder message = new StringBuilder();
@@ -233,84 +286,47 @@ public class MainActivity extends SherlockFragmentActivity {
 									Math.round(ernstOnHead
 											/ (float) ernstBijdrage) - 1)])
 					.append("\n");
-			boolean truer = true;
-			if (truer) {
-				// TODO: Check for duplicates. Repeatedly hitting the save
-				// button
-				// inserts events.
-				// this works on Fienke's phone, but the tablet has never heard
-				// of
-				// CalendarContract
-				// so we do the literals that may change with every new release
-				// of
-				// android. Sigh.
-				ContentResolver cr = getContentResolver();
-				ContentValues values = new ContentValues();
-				values.put("calendar_id", 1);
-				values.put("dtstart", start.getTimeInMillis());
-				values.put("dtend", stop.getTimeInMillis());
-				values.put("title", getString(R.string.calendar_entry_title));
-				values.put("description", message.toString());
-				values.put("eventTimezone", TimeZone.getDefault().getID());
-				values.put("eventLocation", getLocation());
-				if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
-					// the tablet does not understand these columns
-					values.put("availability", 0);
-					values.put("accessLevel", 2);
-				}
-				cr.insert(Uri.parse("content://com.android.calendar/events"),
-						values);
-				// This is only needed when we are on the first tab
-				View hcv = findViewById(R.id.hcv);
-				if (hcv != null) {
-					hcv.invalidate();
-				}
-				// provide some feedback
-				Toast.makeText(MainActivity.this, R.string.event_saved,
-						Toast.LENGTH_LONG).show();
-				// } else if (true) {
-				// // this works on Fienke's phone, but the tablet has never
-				// heard
-				// of CalendarContract
-				// ContentResolver cr = getContentResolver();
-				// ContentValues values = new ContentValues();
-				// values.put(Events.CALENDAR_ID, 1);
-				// values.put(Events.DTSTART, start.getTimeInMillis());
-				// values.put(Events.DTEND, stop.getTimeInMillis());
-				// values.put(Events.TITLE,
-				// getString(R.string.calendar_entry_title));
-				// values.put(Events.DESCRIPTION, message.toString());
-				// values.put(Events.EVENT_TIMEZONE,
-				// TimeZone.getDefault().getID());
-				// values.put(Events.EVENT_LOCATION, "");
-				// values.put(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
-				// cr.insert(Events.CONTENT_URI, values);
-				// findViewById(R.id.hcv).invalidate();
-			} else {
-				// this is the nice way to do it, giving the user a way out
-				// but it does not work, except in the emulator
-				Intent intent = new Intent(Intent.ACTION_EDIT)
-						.setData(
-								Uri.parse("content://com.android.calendar/events"))
-						// .setType("vnd.android.cursor.item/event")
-						.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME,
-								start.getTimeInMillis())
-						.putExtra(CalendarContract.EXTRA_EVENT_END_TIME,
-								stop.getTimeInMillis())
-						.putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
-						// just included for completeness
-						.putExtra(Events.TITLE,
-								getString(R.string.calendar_entry_title))
-						.putExtra(Events.DESCRIPTION, message.toString())
-						.putExtra(Events.EVENT_LOCATION, getLocation())
-						// use the simple (non-GPS) location
-						.putExtra(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
-						.putExtra(Events.ACCESS_LEVEL, Events.ACCESS_PRIVATE);
-				startActivity(intent);
+			// TODO: Check for duplicates. Repeatedly hitting the save
+			// button inserts events.
+			ContentResolver cr = getContentResolver();
+			ContentValues values = new ContentValues();
+			values.put("calendar_id", 1);
+			values.put("dtstart", start.getTimeInMillis());
+			values.put("dtend", stop.getTimeInMillis());
+			values.put("title", getString(R.string.calendar_entry_title));
+			values.put("description", message.toString());
+			values.put("eventTimezone", TimeZone.getDefault().getID());
+			values.put("eventLocation", getLocation());
+			values.put("hasAlarm", 0); // no alarm
+			values.put("eventStatus", 1); // confirmed
+			if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
+				// the tablet does not understand these columns
+				values.put("availability", 1); // not blocking? TODO: might be a preference
+				values.put("accessLevel", 2); // private
 			}
+			cr.insert(Uri.parse(Utils.getCalendarUriBase(cr) + "events"),
+					values);
+			// This is only needed when we are on the first tab
+			View hcv = findViewById(R.id.hcv);
+			if (hcv != null) {
+				hcv.invalidate();
+			}
+			// provide some feedback
+			Toast.makeText(MainActivity.this, R.string.event_saved,
+					Toast.LENGTH_LONG).show();
 			return true;
 		}
 		return false;
+	}
+
+	public void repaintTabs() {
+		HPDTime.TimingFragment.pleaseUpdate(getAttack(), getResources()
+				.getStringArray(R.array.lgh_array));
+		HPDDetails.SymptomsFragment.pleaseUpdate(getAttack(), getResources()
+				.getStringArray(R.array.weather_array), getResources()
+				.getStringArray(R.array.humeur_array));
+		HPDHeadLeft.HurtingFragmentLeft.pleaseUpdate(getAttack());
+		HPDHeadRight.HurtingFragmentRight.pleaseUpdate(getAttack());
 	}
 
 	private String getLocation() {
@@ -319,21 +335,6 @@ public class MainActivity extends SherlockFragmentActivity {
 		} else {
 			return here.getLocality();
 		}
-	}
-
-	private Calendar parseIsoDate(String date) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-		Date someTime = new Date();
-		try {
-			someTime = dateFormat.parse(date);
-		} catch (ParseException e) {
-			Toast.makeText(this, "Error: " + e.getLocalizedMessage(),
-					Toast.LENGTH_SHORT).show();
-			return null;
-		}
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(someTime);
-		return cal;
 	}
 
 	/**
@@ -355,6 +356,7 @@ public class MainActivity extends SherlockFragmentActivity {
 		private final ArrayList<TabInfo> mTabs = new ArrayList<TabInfo>();
 
 		static final class TabInfo {
+			@SuppressWarnings("unused")
 			private final String tag;
 			private final Class<?> clss;
 			private final Bundle args;
@@ -419,6 +421,10 @@ public class MainActivity extends SherlockFragmentActivity {
 		public void onTabChanged(String tabId) {
 			int position = mTabHost.getCurrentTab();
 			mViewPager.setCurrentItem(position);
+			View v = mViewPager.getChildAt(position);
+			if (v == null)
+				return;
+			Log.i("chips", v.getClass().getName());
 		}
 
 		@Override
@@ -443,5 +449,12 @@ public class MainActivity extends SherlockFragmentActivity {
 		@Override
 		public void onPageScrollStateChanged(int state) {
 		}
+	}
+
+	public void setWorkingOnNewHeadache(boolean b) {
+		newHeadache = b;
+		// I want to change the menu immediately here,
+		// read on the internet that this may crash before API level 11...
+		invalidateOptionsMenu();
 	}
 }

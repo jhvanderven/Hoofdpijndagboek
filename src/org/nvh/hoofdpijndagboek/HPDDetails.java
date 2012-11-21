@@ -30,9 +30,44 @@ public class HPDDetails extends SherlockFragmentActivity {
 	public static class SymptomsFragment extends SherlockFragment {
 		private static View view;
 
+		public static void pleaseUpdate(HeadacheAttack a, String[] weer,
+				String[] humeur) {
+			update(a, weer, humeur);
+		}
+
+		private static void update(HeadacheAttack a, String[] weer,
+				String[] humeur) {
+			if (view != null) {
+				((CheckBox) view.findViewById(R.id.menstruatie))
+						.setChecked(a.menstruatie);
+				((CheckBox) view.findViewById(R.id.misselijk))
+						.setChecked(a.misselijk);
+				((CheckBox) view.findViewById(R.id.licht)).setChecked(a.licht);
+				((CheckBox) view.findViewById(R.id.duizelig))
+						.setChecked(a.duizelig);
+				((CheckBox) view.findViewById(R.id.geur)).setChecked(a.geur);
+				((CheckBox) view.findViewById(R.id.inslapen))
+						.setChecked(a.inslapen);
+				((CheckBox) view.findViewById(R.id.doorslapen))
+						.setChecked(a.doorslapen);
+				((CheckBox) view.findViewById(R.id.stoelgang))
+						.setChecked(a.stoelgang);
+				((Spinner) view.findViewById(R.id.spinnerHumeur))
+						.setSelection(Utils.getArrayIndex(humeur, a.humeur));
+				((Spinner) view.findViewById(R.id.spinnerWeer))
+						.setSelection(Utils.getArrayIndex(weer, a.weer));
+			}
+		}
+
 		@Override
-		public void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
+		public void onResume() {
+			HeadacheAttack a = ((MainActivity) getActivity()).getAttack();
+			update(a,
+					getActivity().getResources().getStringArray(
+							R.array.weather_array), getActivity()
+							.getResources()
+							.getStringArray(R.array.humeur_array));
+			super.onResume();
 		}
 
 		@Override
@@ -40,6 +75,7 @@ public class HPDDetails extends SherlockFragmentActivity {
 				Bundle savedInstanceState) {
 			View v = inflater
 					.inflate(R.layout.details_layout, container, false);
+			v.setTag(R.layout.details_layout);
 			view = v;
 			Spinner spinner = (Spinner) v.findViewById(R.id.spinnerWeer);
 			ArrayAdapter<CharSequence> adapter = ArrayAdapter

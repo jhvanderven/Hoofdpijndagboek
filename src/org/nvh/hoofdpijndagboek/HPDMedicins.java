@@ -18,7 +18,6 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
@@ -56,15 +55,22 @@ public class HPDMedicins extends SherlockFragmentActivity {
 		public void getPillsFromCalendar() {
 			// remove the items in the list
 			items.clear();
-			Calendar eergisteren = Calendar.getInstance();
-			eergisteren.add(Calendar.DAY_OF_MONTH, -2);
+			// TODO: This should depend on the date in the TimingFragment
+			// but loosely. Pills are taken regularly and on demand
+			HeadacheAttack a = ((MainActivity)getActivity()).getAttack();
+			Calendar startAttack = Calendar.getInstance();
+			startAttack.setTimeInMillis(a.start.getTimeInMillis());
+			Calendar endAttack = Calendar.getInstance();
+			endAttack.setTimeInMillis(a.end.getTimeInMillis());
+			// add a window to the pills the user has/will take(n)
+			startAttack.add(Calendar.HOUR_OF_DAY, -12);
+			endAttack.add(Calendar.HOUR_OF_DAY, +12);
 			ContentResolver contentResolver = getActivity()
 					.getContentResolver();
 			Uri.Builder builder = Uri.parse(
 					uriBaseForCalendar + "instances/when/").buildUpon();
-			ContentUris.appendId(builder, eergisteren.getTimeInMillis());
-			ContentUris.appendId(builder, Calendar.getInstance()
-					.getTimeInMillis());
+			ContentUris.appendId(builder, startAttack.getTimeInMillis());
+			ContentUris.appendId(builder, endAttack.getTimeInMillis());
 
 			Cursor eventCursor = contentResolver.query(builder.build(),
 					new String[] { "title", "begin", "description" }, null,
@@ -171,6 +177,5 @@ public class HPDMedicins extends SherlockFragmentActivity {
 			}
 			return super.onOptionsItemSelected(item);
 		}
-
 	}
 }

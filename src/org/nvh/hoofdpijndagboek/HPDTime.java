@@ -31,11 +31,14 @@ public class HPDTime extends SherlockFragmentActivity {
 
 	public static class TimingFragment extends SherlockFragment {
 		private static View view;
-	
-		public static TextView startDateTime;
-		public static TextView endDateTime;
+
+		public static Button startTime;
+		public static Button startDate;
+		public static Button endTime;
+		public static Button endDate;
+
 		public static Spinner ernst;
-		
+
 		private static int startDateYear;
 		private static int startDateMonth;
 		private static int startDateDay;
@@ -47,21 +50,43 @@ public class HPDTime extends SherlockFragmentActivity {
 		private static int endTimeHour;
 		private static int endTimeMinute;
 
-		public static String getData(){
+		public static String getData() {
 			StringBuilder sb = new StringBuilder();
-			sb.append(view.getContext().getString(R.string.ernst)).append(":").append(ernst.getSelectedItem().toString()).append("\n");
+			sb.append(view.getContext().getString(R.string.ernst)).append(":")
+					.append(ernst.getSelectedItem().toString()).append("\n");
 			return sb.toString();
 		}
-	
+
+		public static void pleaseUpdate(HeadacheAttack a, String[] lgh){
+			update(a, lgh);
+		}
+
+		private static void update(HeadacheAttack a, String[] lgh) {
+			ernst.setSelection(Utils.getArrayIndex(lgh, a.ernst));
+			updateTimes(startDate, startTime, a.start.get(Calendar.YEAR),
+					a.start.get(Calendar.MONTH),
+					a.start.get(Calendar.DAY_OF_MONTH),
+					a.start.get(Calendar.HOUR_OF_DAY),
+					a.start.get(Calendar.MINUTE));
+			updateTimes(endDate, endTime, a.end.get(Calendar.YEAR),
+					a.end.get(Calendar.MONTH),
+					a.end.get(Calendar.DAY_OF_MONTH),
+					a.end.get(Calendar.HOUR_OF_DAY),
+					a.end.get(Calendar.MINUTE));
+		}
 		@Override
-		public void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
+		public void onResume() {
+			HeadacheAttack a = ((MainActivity) getActivity()).getAttack();
+			update(a, getActivity().getResources()
+					.getStringArray(R.array.lgh_array));
+			super.onResume();
 		}
 
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
 			View v = inflater.inflate(R.layout.time_layout, container, false);
+			v.setTag(R.layout.time_layout);
 			ernst = (Spinner) v.findViewById(R.id.spinnerErnst);
 			ArrayAdapter<CharSequence> adapter = ArrayAdapter
 					.createFromResource(getActivity(), R.array.lgh_array,
@@ -82,58 +107,62 @@ public class HPDTime extends SherlockFragmentActivity {
 			endDateYear = startDateYear;
 			endTimeHour = startTimeHour + 4;
 			endTimeMinute = startTimeMinute;
-			startDateTime = (TextView) v.findViewById(R.id.startDateTime);
-			endDateTime = (TextView) v.findViewById(R.id.endDateTime);
-			updateTimes(startDateTime, startDateYear, startDateMonth,
+			// startDateTime = (TextView) v.findViewById(R.id.startDateTime);
+			// endDateTime = (TextView) v.findViewById(R.id.endDateTime);
+			startDate = (Button) v.findViewById(R.id.startDate);
+			startDate.setTag(R.id.startDate);
+			startDate.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					showDatePickerDialog(v);
+
+				}
+			});
+			startTime = (Button) v.findViewById(R.id.startTime);
+			startTime.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					showTimePickerDialog(v);
+
+				}
+			});
+			endDate = (Button) v.findViewById(R.id.endDate);
+			endDate.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					showDatePickerDialog(v);
+
+				}
+			});
+			endTime = (Button) v.findViewById(R.id.endTime);
+			endTime.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					showTimePickerDialog(v);
+
+				}
+			});
+			updateTimes(startDate, startTime, startDateYear, startDateMonth,
 					startDateDay, startTimeHour, startTimeMinute);
-			updateTimes(endDateTime, endDateYear, endDateMonth, endDateDay,
-					endTimeHour, endTimeMinute);
-			Button b = (Button) v.findViewById(R.id.startDate);
-			b.setOnClickListener(new OnClickListener() {
+			updateTimes(endDate, endTime, endDateYear, endDateMonth,
+					endDateDay, endTimeHour, endTimeMinute);
 
-				@Override
-				public void onClick(View v) {
-					showDatePickerDialog(v);
-
-				}
-			});
-			b = (Button) v.findViewById(R.id.startTime);
-			b.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					showTimePickerDialog(v);
-
-				}
-			});
-			b = (Button) v.findViewById(R.id.endDate);
-			b.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					showDatePickerDialog(v);
-
-				}
-			});
-			b = (Button) v.findViewById(R.id.endTime);
-			b.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					showTimePickerDialog(v);
-
-				}
-			});
-			
-			view=v;
+			view = v;
 			return v;
 		}
 
-		private static void updateTimes(TextView v, int year, int month,
-				int day, int hour, int minute) {
-			String s = String.format("%4d-%02d-%02d %02d:%02d", year,
-					month + 1, day, hour, minute);
-			v.setText(s);
+		public static void updateTimes(TextView date, TextView time, int year,
+				int month, int day, int hour, int minute) {
+			String d = String.format("%4d-%02d-%02d", year, month + 1, day);
+			String t = String.format("%02d:%02d", hour, minute);
+			if (date != null)
+				date.setText(d);
+			if (time != null)
+				time.setText(t);
 		}
 
 		public void showTimePickerDialog(View v) {
@@ -184,13 +213,14 @@ public class HPDTime extends SherlockFragmentActivity {
 				case R.id.startTime:
 					startTimeHour = hourOfDay;
 					startTimeMinute = minute;
-					updateTimes(startDateTime, startDateYear, startDateMonth,
-							startDateDay, startTimeHour, startTimeMinute);
+					updateTimes(startDate, startTime, startDateYear,
+							startDateMonth, startDateDay, startTimeHour,
+							startTimeMinute);
 					break;
 				case R.id.endTime:
 					endTimeHour = hourOfDay;
 					endTimeMinute = minute;
-					updateTimes(endDateTime, endDateYear, endDateMonth,
+					updateTimes(endDate, endTime, endDateYear, endDateMonth,
 							endDateDay, endTimeHour, endTimeMinute);
 					break;
 
@@ -232,15 +262,16 @@ public class HPDTime extends SherlockFragmentActivity {
 					endDateDay = day;
 					endDateMonth = month;
 					endDateYear = year;
-					updateTimes(endDateTime, endDateYear, endDateMonth,
+					updateTimes(endDate, endTime, endDateYear, endDateMonth,
 							endDateDay, endTimeHour, endTimeMinute);
 					break;
 				case R.id.startDate:
 					startDateDay = day;
 					startDateMonth = month;
 					startDateYear = year;
-					updateTimes(startDateTime, startDateYear, startDateMonth,
-							startDateDay, startTimeHour, startTimeMinute);
+					updateTimes(startDate, startTime, startDateYear,
+							startDateMonth, startDateDay, startTimeHour,
+							startTimeMinute);
 					break;
 				}
 			}

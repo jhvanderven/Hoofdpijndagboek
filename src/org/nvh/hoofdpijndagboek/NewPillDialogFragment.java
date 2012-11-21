@@ -17,8 +17,10 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -31,6 +33,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.SlidingDrawer;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -265,11 +268,30 @@ public class NewPillDialogFragment extends DialogFragment {
 								values.put("description", message.toString());
 								values.put("eventTimezone", TimeZone
 										.getDefault().getID());
-								values.put("hasAlarm", 0);
-								values.put("eventStatus", 1);
-								cr.insert(Uri.parse(baseUriForCalendar
-										+ "events"), values);
-								if (alf != null){
+								values.put("hasAlarm", 0); // no alarm
+								values.put("eventStatus", 1); // confirmed
+								if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
+									values.put("availability", 1); // allow other appointments
+									values.put("accessLevel", 2); // private
+								}
+								Uri result = cr.insert(Uri
+										.parse(baseUriForCalendar + "events"),
+										values);
+								Long event_id = ContentUris.parseId(result);
+								Uri deleteReminders = Uri
+										.parse(baseUriForCalendar + "reminders");
+								Cursor cursor = cr.query(deleteReminders,
+										new String[] { "_id" }, "event_id="
+												+ event_id.toString(), null,
+										null);
+								while (cursor.moveToNext()) {
+									// never get here :-(
+									Uri deleteUri = ContentUris.withAppendedId(
+											deleteReminders, cursor.getLong(0));
+									cr.delete(deleteUri, null, null);
+								}
+								cursor.close();
+								if (alf != null) {
 									alf.getPillsFromCalendar(); // update list
 								}
 							}

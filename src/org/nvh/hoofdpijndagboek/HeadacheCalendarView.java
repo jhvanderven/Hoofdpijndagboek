@@ -1,8 +1,10 @@
 package org.nvh.hoofdpijndagboek;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,14 +26,25 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.SoundEffectConstants;
 import android.view.View;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 public class HeadacheCalendarView extends View implements OnGestureListener {
+	private GestureDetector gesturedetector;
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		// the trick is to call the onTouchEvent of the detector
+		return gesturedetector.onTouchEvent(event);
+	}
+
 	public class CalendarOnLongClickListener implements OnLongClickListener {
 		@Override
 		public boolean onLongClick(View v) {
@@ -64,12 +77,14 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			// layout
 			View v = inflater.inflate(R.layout.calendar_columns, null);
 			builder.setView(v)
-					.setPositiveButton(getActivity().getString(R.string.dialogOk),
+					.setPositiveButton(
+							getActivity().getString(R.string.dialogOk),
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {
 									int csel = cols.getCheckedRadioButtonId();
-									RadioButton b = (RadioButton) cols.findViewById(csel);
+									RadioButton b = (RadioButton) cols
+											.findViewById(csel);
 									int c = Integer.parseInt((String) b
 											.getText()) * 7;
 									int rsel = rows.getCheckedRadioButtonId();
@@ -90,7 +105,8 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 									HeadacheCalendarView.this.invalidate();
 								}
 							})
-					.setNegativeButton(getActivity().getString(R.string.dialogCancel),
+					.setNegativeButton(
+							getActivity().getString(R.string.dialogCancel),
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {
@@ -108,42 +124,42 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			Integer r = b.getInt("rows");
 			switch (c) {
 			case 7:
-				((RadioButton)cols.findViewById(R.id.week1c)).setChecked(true);
+				((RadioButton) cols.findViewById(R.id.week1c)).setChecked(true);
 				break;
 			case 14:
-				((RadioButton)cols.findViewById(R.id.week2c)).setChecked(true);
+				((RadioButton) cols.findViewById(R.id.week2c)).setChecked(true);
 				break;
 			case 21:
-				((RadioButton)cols.findViewById(R.id.week3c)).setChecked(true);
+				((RadioButton) cols.findViewById(R.id.week3c)).setChecked(true);
 				break;
 			case 28:
-				((RadioButton)cols.findViewById(R.id.week4c)).setChecked(true);
+				((RadioButton) cols.findViewById(R.id.week4c)).setChecked(true);
 				break;
 			case 35:
-				((RadioButton)cols.findViewById(R.id.week5c)).setChecked(true);
+				((RadioButton) cols.findViewById(R.id.week5c)).setChecked(true);
 				break;
 			default:
-				((RadioButton)cols.findViewById(R.id.week3c)).setChecked(true);
+				((RadioButton) cols.findViewById(R.id.week3c)).setChecked(true);
 				break;
 			}
 			switch (r) {
 			case 7:
-				((RadioButton)rows.findViewById(R.id.week1r)).setChecked(true);
+				((RadioButton) rows.findViewById(R.id.week1r)).setChecked(true);
 				break;
 			case 14:
-				((RadioButton)rows.findViewById(R.id.week2r)).setChecked(true);
+				((RadioButton) rows.findViewById(R.id.week2r)).setChecked(true);
 				break;
 			case 21:
-				((RadioButton)rows.findViewById(R.id.week3r)).setChecked(true);
+				((RadioButton) rows.findViewById(R.id.week3r)).setChecked(true);
 				break;
 			case 28:
-				((RadioButton)rows.findViewById(R.id.week4r)).setChecked(true);
+				((RadioButton) rows.findViewById(R.id.week4r)).setChecked(true);
 				break;
 			case 35:
-				((RadioButton)rows.findViewById(R.id.week5r)).setChecked(true);
+				((RadioButton) rows.findViewById(R.id.week5r)).setChecked(true);
 				break;
 			default:
-				((RadioButton)rows.findViewById(R.id.week3r)).setChecked(true);
+				((RadioButton) rows.findViewById(R.id.week3r)).setChecked(true);
 				break;
 			}
 			return dialog;
@@ -180,7 +196,9 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 		cc = settings.getInt("calendarColumns", 21);
 		cr = settings.getInt("calendarRows", 21);
 		cell = new Cell(cc, cr);
-		calendarURI = Utils.getCalendarUriBase(getContext().getContentResolver());
+		calendarURI = Utils.getCalendarUriBase(getContext()
+				.getContentResolver());
+		gesturedetector = new GestureDetector(this.getContext(), this);
 	}
 
 	private class Cell {
@@ -218,10 +236,12 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			return cell;
 		}
 
-		public Calendar getDate(Cell c) {
-			// untested!
+		public Calendar getDate(double x, double y) {
 			Calendar now = Calendar.getInstance();
-			now.roll(Calendar.DAY_OF_YEAR, (c.i % c.N) * c.M + c.j);
+			int daysFromOrigin = (int) (Math.floor(x * N) * M + Math.floor(y
+					* M));
+			int daysFromNow = M * N - daysFromOrigin - 1;
+			now.roll(Calendar.DAY_OF_YEAR, -1 * daysFromNow);
 			return now;
 		}
 	}
@@ -320,23 +340,22 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 				begin.setTimeInMillis(eventCursor.getLong(1));
 				Calendar end = Calendar.getInstance();
 				end.setTimeInMillis(eventCursor.getLong(2));
-				// Boolean allDay = !eventCursor.getString(3).equals("0");
 				String description = eventCursor.getString(4);
 				Calendar date = (Calendar) begin.clone();
+				date.set(Calendar.HOUR_OF_DAY, 0);
+				date.set(Calendar.MINUTE, 0);
+				date.set(Calendar.SECOND, 0);
+				date.set(Calendar.MILLISECOND, 0);
 				String title = eventCursor.getString(0);
 				setColor(lgh, description, title);
+				// handle events that last multiple days
 				do {
-					Calendar cd = (Calendar) date.clone();
-					cd.set(Calendar.HOUR, 0);
-					cd.set(Calendar.MINUTE, 0);
-					cd.set(Calendar.SECOND, 0);
-					cd.set(Calendar.MILLISECOND, 0);
-					List<Integer> c = nEvents.get(cd.getTimeInMillis());
+					List<Integer> c = nEvents.get(date.getTimeInMillis());
 					if (c == null) {
 						c = new ArrayList<Integer>();
 					}
 					c.add(p.getColor());
-					nEvents.put(cd.getTimeInMillis(), c);
+					nEvents.put(date.getTimeInMillis(), c);
 					date.add(Calendar.DAY_OF_MONTH, 1);
 				} while (date.before(end));
 			}
@@ -354,26 +373,26 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 					rect.left = cell.i * xstep + 1 + ((event > 0) ? 1 : 0)
 							+ event * width;
 					rect.top = cell.j * ystep + 1;
-					if (event != (nEvents.get(millis).size() - 1)) {
+//					if (event != (nEvents.get(millis).size() - 1)) {
 						rect.right = rect.left + width - 1;
-					} else {
-						// fix rounding errors by extending last rect
-						rect.right = cell.i * xstep + xstep;
-					}
+//					} else {
+//						// fix rounding errors by extending last rect
+//						rect.right = cell.i * xstep + xstep;
+//					}
 					rect.bottom = rect.top + ystep - 1;
 					canvas.drawRect(rect, p);
-					if (event != (nEvents.get(millis).size() - 1)) {
-						p.setColor(Color.BLACK);
-						canvas.drawLine(rect.right + 1, rect.top,
-								rect.right + 1, rect.bottom, p);
-					}
+//					if (event != (nEvents.get(millis).size() - 1)) {
+//						p.setColor(Color.BLACK);
+//						canvas.drawLine(rect.right + 1, rect.top,
+//								rect.right + 1, rect.bottom, p);
+//					}
 					event++;
 				}
 			}
 			eventCursor.close();
-			
+
 			// mark beginnings of month, I want these on top.
-			p.setTextSize(Math.min(ystep - 5, xstep-2));
+			p.setTextSize(Math.min(ystep - 5, xstep - 2));
 			Calendar first = Calendar.getInstance();
 			first.set(Calendar.DAY_OF_MONTH, 1);
 			// mark first of the month
@@ -402,8 +421,8 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 				p.setColor(Color.BLACK);
 				String s = f.format(first.getTime());
 				p.getTextBounds(s, 0, s.length(), bounds);
-				canvas.drawText(s, cell.i * xstep + (xstep - bounds.width()) / 2,
-						(cell.j) * ystep + ystep - 3, p);
+				canvas.drawText(s, cell.i * xstep + (xstep - bounds.width())
+						/ 2 -3, (cell.j) * ystep + ystep - 5, p);
 				first.add(Calendar.MONTH, -1);
 			}
 		}
@@ -414,19 +433,18 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			int ernst = parseDescription(description,
 					getContext().getString(R.string.ernst), lgh);
 			if (ernst == 0) {
-				p.setColor(Color.GRAY);
-			} else if (ernst == 1) {
 				p.setColor(Color.MAGENTA);
-			} else if (ernst == 2) {
+			} else if (ernst == 1) {
 				p.setColor(Color.YELLOW);
-			} else if (ernst == 3) {
+			} else if (ernst == 2) {
 				p.setColor(Color.RED);
 			}
+		} else if (title.equals(getContext().getString(R.string.calendar_pill_title))){
+			p.setColor(Color.WHITE);
 		} else {
 			p.setColor(Color.LTGRAY);
 		}
 	}
-
 
 	private int parseDescription(String description, String what,
 			String[] options) {
@@ -479,7 +497,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	// }
 
 	@Override
-	public boolean onDown(MotionEvent arg0) {
+	public boolean onDown(MotionEvent e) {
 		return true;
 	}
 
@@ -491,6 +509,14 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 	@Override
 	public void onLongPress(MotionEvent e) {
+		SetCalendarDisplayDialog scdd = new SetCalendarDisplayDialog();
+		Bundle args = new Bundle();
+		args.putInt("rows", this.cr);
+		args.putInt("columns", this.cc);
+		scdd.setArguments(args);
+		scdd.show(
+				((FragmentActivity) getContext()).getSupportFragmentManager(),
+				null);
 	}
 
 	@Override
@@ -505,6 +531,60 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 	@Override
 	public boolean onSingleTapUp(MotionEvent e) {
-		return false;
+		// are there relevant events in the calendar?
+		// TODO: Depending on the number of days we are displaying
+		// we may want to extend the days with neighbouring dates.
+		Calendar[] days = new Calendar[1];
+		days[0] = this.cell.getDate(e.getX() / this.getWidth(),
+				e.getY() / this.getHeight());
+		List<String> hits = Utils.getEvents(
+				getContext().getString(R.string.calendar_entry_title), days,
+				getContext().getContentResolver());
+		if (hits.size() > 0) {
+			// Get instance of Vibrator from current Context
+			// Vibrator v = (Vibrator)
+			// getContext().getSystemService(Context.VIBRATOR_SERVICE);
+			// v.vibrate(50);
+			HeadacheCalendarView.this
+					.playSoundEffect(SoundEffectConstants.CLICK);
+			HeadacheAttack attack = ((MainActivity)getContext()).getAttack();
+			String description = hits.get(0);
+			attack.start = handleDateAndTime(description, "begin");
+			attack.end = handleDateAndTime(description, "end");
+			attack.ernst=Utils.parseDescription(description, getContext().getString(R.string.ernst));
+			attack.leftPainPoints = Utils.parseDescriptionOuch(
+					 description, getContext().getString(R.string.left),
+					 getContext().getString(R.string.ouch));
+			attack.rightPainPoints = Utils.parseDescriptionOuch(description,
+					getContext().getString(R.string.right), getContext()
+							.getString(R.string.ouch));
+			attack.misselijk = Utils.parseDescription(description, getContext().getString(R.string.misselijk)).equals(getContext().getString(R.string.ja));
+			attack.menstruatie = Utils.parseDescription(description, getContext().getString(R.string.menstruatie)).equals(getContext().getString(R.string.ja));
+			attack.doorslapen = Utils.parseDescription(description, getContext().getString(R.string.doorslapen)).equals(getContext().getString(R.string.ja));
+			attack.duizelig = Utils.parseDescription(description, getContext().getString(R.string.duizelig)).equals(getContext().getString(R.string.ja));
+			attack.geur = Utils.parseDescription(description, getContext().getString(R.string.geur)).equals(getContext().getString(R.string.ja));
+			attack.inslapen = Utils.parseDescription(description, getContext().getString(R.string.inslapen)).equals(getContext().getString(R.string.ja));
+			attack.licht = Utils.parseDescription(description, getContext().getString(R.string.licht)).equals(getContext().getString(R.string.ja));
+			attack.stoelgang = Utils.parseDescription(description, getContext().getString(R.string.stoelgang)).equals(getContext().getString(R.string.ja));
+			attack.humeur=Utils.parseDescription(description, getContext().getString(R.string.humeur));
+			attack.weer=Utils.parseDescription(description, getContext().getString(R.string.weer));
+			((MainActivity)getContext()).setWorkingOnNewHeadache(false);
+			((MainActivity)getContext()).repaintTabs();
+		}
+		return true;
+	}
+
+	private Calendar handleDateAndTime(String description, String field) {
+		String start = Utils.parseDescription(description, field);
+		Date aDate;
+		try {
+			aDate = Utils.parse(start,
+					getContext().getString(R.string.very_long_date_time));
+			Calendar c = Calendar.getInstance();
+			c.setTimeInMillis(aDate.getTime());
+			return c;
+		} catch (ParseException e1) {
+		}
+		return null;
 	}
 }

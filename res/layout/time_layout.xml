@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 	Lessons learned: Put this inside a scrollview and Android never knows
-    the height of your last control. 
+    the height of your last control. 
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
@@ -13,11 +13,11 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
 
-        <TextView
+        <!-- TextView
             android:id="@+id/startDateTime"
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_weight="3" />
+            android:layout_weight="3" /-->
 
         <Button
             android:id="@+id/startDate"
@@ -39,11 +39,11 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
 
-        <TextView
+        <!-- TextView
             android:id="@+id/endDateTime"
             android:layout_width="0px"
             android:layout_height="wrap_content"
-            android:layout_weight="3" />
+            android:layout_weight="3" /-->
 
         <Button
             android:id="@+id/endDate"
@@ -79,13 +79,19 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="horizontal" >
+        android:orientation="vertical" >
+
+        <org.nvh.hoofdpijndagboek.HeadacheSparkView
+            android:id="@+id/spark"
+            android:layout_width="match_parent"
+            android:layout_height="10dip"
+            android:layout_weight="1" />
 
         <org.nvh.hoofdpijndagboek.HeadacheCalendarView
             android:id="@+id/hcv"
-            android:layout_width="0dip"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
-    </LinearLayout>
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_weight="15" />
+        </LinearLayout>
 
 </LinearLayout>
