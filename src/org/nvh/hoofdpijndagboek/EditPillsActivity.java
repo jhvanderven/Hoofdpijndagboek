@@ -12,6 +12,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
 
@@ -36,6 +37,7 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 
 		private String medication = "";
 		private List<String> pills = null;
+		protected boolean dirty;
 
 		@Override
 		public void onActivityCreated(Bundle savedInstanceState) {
@@ -55,11 +57,21 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 		}
 
 		@Override
+		public void onPause() {
+			if(dirty){
+				// TODO: Yes/No/Cancel dialog
+				Toast.makeText(getActivity(), "You have made changes. These are lost now.", Toast.LENGTH_LONG).show();
+			}
+			super.onPause();
+		}
+
+		@Override
 		public boolean onOptionsItemSelected(
 				com.actionbarsherlock.view.MenuItem item) {
 			if (item.getItemId() == R.id.menu_save) {
 				// write back the pill list to the preferences
 				Utils.saveAllMedication(pills, getActivity());
+				dirty = false;
 				return true;
 			} else if (item.getItemId() == R.id.menu_add) {
 				editMedicationName(-1, "");
@@ -91,6 +103,7 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 				pills.remove(info.position);
 				((ArrayAdapter<String>) getListAdapter())
 						.notifyDataSetChanged();
+				dirty = true;
 				return true;
 			}
 			return super.onContextItemSelected(item);
@@ -119,6 +132,7 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 							} else {
 								pills.set(position, medication);
 							}
+							dirty = true;
 						}
 					});
 			builder.setNegativeButton(getString(R.string.dialogCancel),

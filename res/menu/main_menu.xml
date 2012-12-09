@@ -15,4 +15,9 @@
         android:orderInCategory="100"
         android:showAsAction="never"
         android:icon="@drawable/medicin2"/>
+    <item android:id="@+id/menu_prefs"
+        android:title="@string/settings"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        />
 </menu>

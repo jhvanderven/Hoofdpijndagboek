@@ -82,9 +82,9 @@ public class PillTimeView extends View {
 		float x2 = getXPosition(w - 2 * xOff, end.getTimeInMillis()) + xOff;
 		p.setStyle(Style.FILL);
 		p.setAlpha(128);
-		r.top = h / 2 + hTick;
+		r.top = h / 2 - hTick;
 		r.left = (int) x;
-		r.bottom = h / 2 - hTick;
+		r.bottom = h / 2 + hTick;
 		r.right = (int) x2;
 		canvas.drawRect(r, p);
 		if (pill_time != -1) {

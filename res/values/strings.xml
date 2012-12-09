@@ -29,9 +29,10 @@
     <string name="columns">weken verticaal (kolommen)</string>
     <string name="months_in_rows">maanden horizontaal</string>
     <string name="title_for_grid">hoeveel weken wil je zien?</string>
-	<string name="laag">laag</string>
-	<string name="gemiddeld">gemiddeld</string>
-	<string name="hoog">hoog</string>
+    <string name="laag">laag</string>
+    <string name="gemiddeld">gemiddeld</string>
+    <string name="hoog">hoog</string>
+
     <string-array name="weather_array">
         <item>sneeuw</item>
         <item>zeer koud</item>
@@ -91,4 +92,11 @@
         <item>geen</item>
     </string-array>
 
+    <string name="settings">Instellingen</string>
+    <string name="attack_verification">Weet je het zeker?</string>
+	<string name="attack_starts_more_than_a_month_ago">Aanval begint meer dan een maand geleden</string>
+	<string name="attack_ends_in_the_future">Aanval eindigt in de toekomst</string>
+	<string name="attack_starts_in_the_future">Aanval begint in de toekomst</string>
+	<string name="attack_lasts_longer_than_one_week">Aanval duurt langer dan 1 week</string>
+	<string name="attack_overlaps_another_attack">Aanval valt samen met andere aanval</string>
 </resources>

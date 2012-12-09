@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -123,7 +124,6 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 					pictureID);
 			b = bImm.copy(Bitmap.Config.ARGB_8888, true);
 			paint = new Paint();
-			dest = new Rect(0, 0, b.getWidth(), b.getHeight());
 			gesturedetector = new GestureDetector(activity, this);
 		}
 
@@ -133,8 +133,15 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 			return gesturedetector.onTouchEvent(event);
 		}
 
+		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
+			// this fixes the tablet: allthough the dpi == 160 it has more pixels
+			// so it loads the wrong bitmap (because of the API level?) and
+			// we have to stretch it. An svg version of the head would work
+			// faster?
+			Bitmap.createScaledBitmap(b, getWidth(), getHeight(), false);
+			dest = new Rect(0, 0, getWidth(), getHeight());
 			MainActivity m = (MainActivity) getContext();
 			points = m.getPainPoints(1);
 			canvas.drawBitmap(b, null, dest, paint);

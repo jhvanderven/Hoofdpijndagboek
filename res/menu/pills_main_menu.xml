@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
+    <!-- TODO: We may want different icons for saving pills and saving attacks -->
     <item
         android:id="@+id/menu_save"
-        android:icon="@drawable/ic_compose"
+        android:icon="@drawable/ic_menu_archive"
         android:orderInCategory="100"
         android:showAsAction="always"
         android:title="@string/menu_save"/>

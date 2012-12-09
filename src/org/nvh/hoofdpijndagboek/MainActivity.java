@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
@@ -202,6 +204,9 @@ public class MainActivity extends SherlockFragmentActivity {
 		// we have to gather the information from all the tabs and
 		// create one or more (medication) entries in the calendar
 		switch (item.getItemId()) {
+		case R.id.menu_prefs:
+			startActivity(new Intent(this, HeadachePreferences.class));
+			return true;
 		case R.id.menu_edit_pills:
 			startActivity(new Intent(this, EditPillsActivity.class));
 			return true;
@@ -213,6 +218,12 @@ public class MainActivity extends SherlockFragmentActivity {
 			invalidateOptionsMenu();
 			return true;
 		case R.id.menu_save_headache:
+			// TODO: Warn about strange entries, such as:
+			// headaches starting more than a year ago
+			// headaches ending in the future
+			// headaches starting in the future
+			// headaches lasting longer than a week
+			// headaches that overlap existing headaches
 			String startDate = HPDTime.TimingFragment.startDate.getText()
 					.toString();
 			String startTime = HPDTime.TimingFragment.startTime.getText()
@@ -237,71 +248,131 @@ public class MainActivity extends SherlockFragmentActivity {
 			} catch (ParseException e1) {
 				return true;
 			}
-			StringBuilder message = new StringBuilder();
-			try {
-				message.append(HPDTime.TimingFragment.getData());
-			} catch (Exception e) {
-			} finally {
-				// user did not visit one of the other tabs
-			}
-			try {
-				message.append(HPDDetails.SymptomsFragment.getData());
-			} catch (Exception e) {
-			} finally {
-			}
-			message.append(getString(R.string.left)).append(":")
-					.append(getString(R.string.ouch)).append("\n");
-			try {
-				message.append(HPDHeadLeft.HurtingFragmentLeft.getData());
-			} catch (Exception e) {
-			} finally {
-			}
-			message.append(getString(R.string.right)).append(":")
-					.append(getString(R.string.ouch)).append("\n");
-			try {
-				message.append(HPDHeadRight.HurtingFragmentRight.getData());
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-			}
-			// TODO: Check for duplicates. Repeatedly hitting the save
-			// button inserts events.
-			ContentResolver cr = getContentResolver();
-			ContentValues values = new ContentValues();
-			values.put("calendar_id", 1);
-			values.put("dtstart", start.getTimeInMillis());
-			values.put("dtend", stop.getTimeInMillis());
-			values.put("title", getString(R.string.calendar_entry_title));
-			values.put("description", message.toString());
-			values.put("eventTimezone", TimeZone.getDefault().getID());
-			values.put("eventLocation", getLocation());
-			values.put("hasAlarm", 0); // no alarm
-			values.put("eventStatus", 1); // confirmed
-			if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
-				// the tablet does not understand these columns
-				values.put("availability", 1); // not blocking? TODO: might be a preference
-				values.put("accessLevel", 2); // private
-			}
-			cr.insert(Uri.parse(Utils.getCalendarUriBase(cr) + "events"),
-					values);
-			// This is only needed when we are on the first tab
-			View hcv = findViewById(R.id.hcv);
-			if (hcv != null) {
-				hcv.invalidate();
-			}
-			// provide some feedback
-			Toast.makeText(MainActivity.this, R.string.event_saved,
-					Toast.LENGTH_LONG).show();
+			validateStartAndEndOfAttack(start, stop);
 			return true;
 		}
 		return false;
 	}
 
+	private boolean saveAttackInCalendar(Calendar start, Calendar stop) {
+		StringBuilder message = new StringBuilder();
+		try {
+			message.append(HPDTime.TimingFragment.getData());
+		} catch (Exception e) {
+		} finally {
+			// user did not visit one of the other tabs
+		}
+		try {
+			message.append(HPDDetails.SymptomsFragment.getData());
+		} catch (Exception e) {
+		} finally {
+		}
+		message.append(getString(R.string.left)).append(":")
+				.append(getString(R.string.ouch)).append("\n");
+		try {
+			message.append(HPDHeadLeft.HurtingFragmentLeft.getData());
+		} catch (Exception e) {
+		} finally {
+		}
+		message.append(getString(R.string.right)).append(":")
+				.append(getString(R.string.ouch)).append("\n");
+		try {
+			message.append(HPDHeadRight.HurtingFragmentRight.getData());
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		}
+		// TODO: Check for duplicates. Repeatedly hitting the save
+		// button inserts events.
+		ContentResolver cr = getContentResolver();
+		ContentValues values = new ContentValues();
+		values.put("calendar_id", 1);
+		values.put("dtstart", start.getTimeInMillis());
+		values.put("dtend", stop.getTimeInMillis());
+		values.put("title", getString(R.string.calendar_entry_title));
+		values.put("description", message.toString());
+		values.put("eventTimezone", TimeZone.getDefault().getID());
+		values.put("eventLocation", getLocation());
+		values.put("hasAlarm", 0); // no alarm
+		values.put("eventStatus", 1); // confirmed
+		if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
+			// the tablet does not understand these columns
+			values.put("availability", 1); // not blocking? TODO: might be a
+											// preference
+			values.put("accessLevel", 2); // private
+		}
+		cr.insert(Uri.parse(Utils.getCalendarUriBase(cr) + "events"), values);
+		// This is only needed when we are on the first tab
+		View hcv = findViewById(R.id.hcv);
+		if (hcv != null) {
+			hcv.invalidate();
+		}
+		// provide some feedback
+		Toast.makeText(MainActivity.this, R.string.event_saved,
+				Toast.LENGTH_LONG).show();
+		return true;
+	}
+
+	private boolean validateStartAndEndOfAttack(final Calendar start,
+			final Calendar stop) {
+		DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				switch (which) {
+				case DialogInterface.BUTTON_POSITIVE:
+					saveAttackInCalendar(start, stop);
+					break;
+
+				case DialogInterface.BUTTON_NEGATIVE:
+					// we do nothing
+					break;
+				}
+			}
+		};
+		Calendar now = Calendar.getInstance();
+		String message = "";
+		if ((now.getTimeInMillis() - start.getTimeInMillis()) > (30L * 24 * 60 * 60 * 1000)) {
+			// headaches starting more than a month ago
+			message = getString(R.string.attack_starts_more_than_a_month_ago);
+		}
+		else if (stop.getTimeInMillis() > now.getTimeInMillis()) {
+			// headaches ending in the future
+			message = getString(R.string.attack_ends_in_the_future);
+		}
+		else if (start.getTimeInMillis() > now.getTimeInMillis()) {
+			// headaches starting in the future
+			message = getString(R.string.attack_starts_in_the_future);
+		}
+		else if ((stop.getTimeInMillis() - start.getTimeInMillis()) > (7L * 24 * 60 * 60 * 1000)) {
+			// headaches lasting longer than a week
+			message = getString(R.string.attack_lasts_longer_than_one_week);
+		} else {
+			// headaches that overlap existing headaches
+			int n = Utils.getNumberOfAttacks(start, stop, getContentResolver(),
+					getString(R.string.calendar_entry_title));
+			if (n > 0) {
+				message = getString(R.string.attack_overlaps_another_attack);
+			}
+		}
+		if (message != "") {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(getString(R.string.attack_verification))
+					.setMessage(message)
+					.setPositiveButton(getString(android.R.string.ok),
+							dialogClickListener)
+					.setNegativeButton(getString(android.R.string.cancel),
+							dialogClickListener).show();
+		} else {
+			// we can find no strange situation, so we store it
+			saveAttackInCalendar(start, stop);
+		}
+		return true;
+	}
+
 	public void repaintTabs() {
-		HPDTime.TimingFragment.pleaseUpdate(getAttack(),new String[] {
-			getString(R.string.laag),
-			getString(R.string.gemiddeld),
-			getString(R.string.hoog) });
+		HPDTime.TimingFragment.pleaseUpdate(getAttack(), new String[] {
+				getString(R.string.laag), getString(R.string.gemiddeld),
+				getString(R.string.hoog) });
 		HPDDetails.SymptomsFragment.pleaseUpdate(getAttack(), getResources()
 				.getStringArray(R.array.weather_array), getResources()
 				.getStringArray(R.array.humeur_array));

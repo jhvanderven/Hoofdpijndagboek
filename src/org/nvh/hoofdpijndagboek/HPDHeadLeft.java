@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -107,11 +108,12 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 		public HeadViewLeft(FragmentActivity activity, int pictureID,
 				SherlockFragment hurtingFragment) {
 			super(activity);
+			BitmapFactory.Options opts = new BitmapFactory.Options();
+			opts.inScaled = false;
 			Bitmap bImm = BitmapFactory.decodeResource(getResources(),
-					pictureID);
+					pictureID, opts);
 			b = bImm.copy(Bitmap.Config.ARGB_8888, true);
 			paint = new Paint();
-			dest = new Rect(0, 0, b.getWidth(), b.getHeight());
 			gesturedetector = new GestureDetector(activity, this);
 		}
 
@@ -121,8 +123,11 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 			return gesturedetector.onTouchEvent(event);
 		}
 
+		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
+			Bitmap.createScaledBitmap(b, getWidth(), getHeight(), false);
+			dest = new Rect(0, 0, getWidth(), getHeight());
 			MainActivity m = (MainActivity) getContext();
 			points = m.getPainPoints(0);
 			canvas.drawBitmap(b, null, dest, paint);

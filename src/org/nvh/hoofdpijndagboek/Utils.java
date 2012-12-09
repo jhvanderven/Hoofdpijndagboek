@@ -175,6 +175,21 @@ public class Utils {
 		return calendarUriBase;
 	}
 
+	public static int getNumberOfAttacks(Calendar start, Calendar stop,
+			ContentResolver contentResolver, String title) {
+		Uri.Builder builder = Uri.parse(
+				Utils.getCalendarUriBase(contentResolver) + "instances/when/")
+				.buildUpon();
+		ContentUris.appendId(builder, start.getTimeInMillis());
+		ContentUris.appendId(builder, stop.getTimeInMillis());
+
+		Cursor eventCursor = contentResolver.query(builder.build(),
+				new String[] { "title", "begin", "end", "description" },
+				"title='"+ title +"'", null,
+				"startDay ASC, startMinute ASC");
+		return eventCursor.getCount();
+	}
+
 	public static List<String> getEvents(String title, Calendar[] days,
 			ContentResolver contentResolver) {
 		List<String> result = new ArrayList<String>();
@@ -203,8 +218,9 @@ public class Utils {
 					event.setTimeInMillis(eventCursor.getLong(1));
 					if (happensIn(days, event)) {
 						String description = eventCursor.getString(3);
-						if(!description.endsWith("\n")){
-							description+="\n";// my phone will not save this whitespace
+						if (!description.endsWith("\n")) {
+							description += "\n";// my phone will not save this
+												// whitespace
 						}
 						c.setTimeInMillis(eventCursor.getLong(1));
 						description += "begin:" + Utils.format(c) + "\n";

@@ -98,13 +98,13 @@ public class HeadacheSparkView extends View {
 							getContext().getString(R.string.ernst));
 					int ernstIndex = 0;
 					if (ernst.equalsIgnoreCase(getContext().getString(R.string.laag))) {
-						ernstIndex = 0;
-					} else if (ernst.equalsIgnoreCase(getContext().getString(
-							R.string.gemiddeld))) {
 						ernstIndex = 1;
 					} else if (ernst.equalsIgnoreCase(getContext().getString(
-							R.string.hoog))) {
+							R.string.gemiddeld))) {
 						ernstIndex = 2;
+					} else if (ernst.equalsIgnoreCase(getContext().getString(
+							R.string.hoog))) {
+						ernstIndex = 3;
 					}
 					p.setColor(colors[ernstIndex]);
 					long x1 = (begin.getTimeInMillis() - xmin) * (w - 2 * xoff)

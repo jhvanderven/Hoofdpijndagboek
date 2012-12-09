@@ -37,6 +37,8 @@ import android.view.View;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
+// TODO: Cleanup unused code
+
 public class HeadacheCalendarView extends View implements OnGestureListener {
 	private GestureDetector gesturedetector;
 
@@ -321,16 +323,15 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 		ContentResolver contentResolver = getContext().getContentResolver();
 		calendarEvents.clear();
-		Calendar cal = Calendar.getInstance();
-		// TODO: I wonder if this works for all phone makers... I read that some
-		// replaced the calendar with something of their own.
-		// But that was before com.android.calendar
+		Calendar calStart = Calendar.getInstance();
+		calStart.add(Calendar.DAY_OF_YEAR, -cc * cr);
+		Calendar calEnd = Calendar.getInstance();
+
 		// http://android-agenda-widget.googlecode.com/svn-history/r17/android-calendar-provider/trunk/src/com/everybodyallthetime/android/provider/calendar/CalendarProvider.java
 		Uri.Builder builder = Uri.parse(calendarURI + "instances/when/")
 				.buildUpon();
-		cal.add(Calendar.DAY_OF_YEAR, -cc * cr);
-		ContentUris.appendId(builder, cal.getTimeInMillis());
-		ContentUris.appendId(builder, Calendar.getInstance().getTimeInMillis());
+		ContentUris.appendId(builder, calStart.getTimeInMillis());
+		ContentUris.appendId(builder, calEnd.getTimeInMillis());
 
 		Cursor eventCursor = contentResolver
 				.query(builder.build(), new String[] { "title", "begin", "end",
@@ -344,6 +345,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 
 			// read in all events and store in a hash by date
 			while (eventCursor.moveToNext()) {
+				calEnd = Calendar.getInstance();
 				CalendarEvent event = new CalendarEvent();
 				event.start = Calendar.getInstance();
 				event.start.setTimeInMillis(eventCursor.getLong(1));
@@ -351,10 +353,20 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 				event.end.setTimeInMillis(eventCursor.getLong(2));
 				event.text = eventCursor.getString(4);
 				Calendar date = (Calendar) event.start.clone();
+
+				// handle events that start very early
+				if (date.before(calStart)) {
+					date = (Calendar) calStart.clone();
+				}
 				date.set(Calendar.HOUR_OF_DAY, 0);
 				date.set(Calendar.MINUTE, 0);
 				date.set(Calendar.SECOND, 0);
 				date.set(Calendar.MILLISECOND, 0);
+
+				// handle events that end very late
+				if (calEnd.after(event.end)) {
+					calEnd = (Calendar) event.end.clone();
+				}
 				event.title = eventCursor.getString(0);
 				setColor(lgh, event.text, event.title);
 				event.color = p.getColor();
@@ -368,7 +380,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 					c.add(event);
 					calendarEvents.put(date.getTimeInMillis(), c);
 					date.add(Calendar.DAY_OF_MONTH, 1);
-				} while (date.before(event.end));
+				} while (date.before(calEnd));
 			}
 
 			// show the events as coloured rects in the grid
@@ -398,8 +410,8 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 					eventCount = 0;
 					pillCount = 0;
 					for (CalendarEvent event : calendarEvents.get(millis)) {
-						if (event.title.equalsIgnoreCase(getContext().getString(
-								R.string.calendar_pill_title))) {
+						if (event.title.equalsIgnoreCase(getContext()
+								.getString(R.string.calendar_pill_title))) {
 							pillCount++;
 						} else {
 							eventCount++;
@@ -409,8 +421,8 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 						width = (int) ((float) (xstep - 2) / eventCount);
 						eventCount = 0;
 						for (CalendarEvent event : calendarEvents.get(millis)) {
-							if (!event.title.equalsIgnoreCase(getContext().getString(
-									R.string.calendar_pill_title))) {
+							if (!event.title.equalsIgnoreCase(getContext()
+									.getString(R.string.calendar_pill_title))) {
 								p.setColor(event.color);
 								p.setAlpha(255);
 								rect.left = cell.i * xstep + 3
@@ -431,8 +443,8 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 						// will only get smaller.
 						width = xstep - 2;
 						for (CalendarEvent event : calendarEvents.get(millis)) {
-							if (!event.title.equalsIgnoreCase(getContext().getString(
-									R.string.calendar_pill_title))) {
+							if (!event.title.equalsIgnoreCase(getContext()
+									.getString(R.string.calendar_pill_title))) {
 								p.setColor(event.color);
 								p.setAlpha(128);
 								rect.left = cell.i * xstep + 3;
@@ -519,7 +531,8 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	}
 
 	private void setColor(String[] lgh, String description, String title) {
-		if (title.equalsIgnoreCase(getContext().getString(R.string.calendar_entry_title))) {
+		if (title.equalsIgnoreCase(getContext().getString(
+				R.string.calendar_entry_title))) {
 			int ernst = Utils.getArrayIndex(
 					lgh,
 					Utils.parseDescription(description,
@@ -632,29 +645,29 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 					getContext().getString(R.string.right), getContext()
 							.getString(R.string.ouch));
 			attack.misselijk = Utils.parseDescription(description,
-					getContext().getString(R.string.misselijk)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
+					getContext().getString(R.string.misselijk))
+					.equalsIgnoreCase(getContext().getString(R.string.ja));
 			attack.menstruatie = Utils.parseDescription(description,
-					getContext().getString(R.string.menstruatie)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
+					getContext().getString(R.string.menstruatie))
+					.equalsIgnoreCase(getContext().getString(R.string.ja));
 			attack.doorslapen = Utils.parseDescription(description,
-					getContext().getString(R.string.doorslapen)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
+					getContext().getString(R.string.doorslapen))
+					.equalsIgnoreCase(getContext().getString(R.string.ja));
 			attack.duizelig = Utils.parseDescription(description,
-					getContext().getString(R.string.duizelig)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
+					getContext().getString(R.string.duizelig))
+					.equalsIgnoreCase(getContext().getString(R.string.ja));
 			attack.geur = Utils.parseDescription(description,
 					getContext().getString(R.string.geur)).equalsIgnoreCase(
 					getContext().getString(R.string.ja));
 			attack.inslapen = Utils.parseDescription(description,
-					getContext().getString(R.string.inslapen)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
+					getContext().getString(R.string.inslapen))
+					.equalsIgnoreCase(getContext().getString(R.string.ja));
 			attack.licht = Utils.parseDescription(description,
 					getContext().getString(R.string.licht)).equalsIgnoreCase(
 					getContext().getString(R.string.ja));
 			attack.stoelgang = Utils.parseDescription(description,
-					getContext().getString(R.string.stoelgang)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
+					getContext().getString(R.string.stoelgang))
+					.equalsIgnoreCase(getContext().getString(R.string.ja));
 			attack.humeur = Utils.parseDescription(description, getContext()
 					.getString(R.string.humeur));
 			attack.weer = Utils.parseDescription(description, getContext()

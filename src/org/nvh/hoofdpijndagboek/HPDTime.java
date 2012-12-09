@@ -21,6 +21,8 @@ import android.widget.TimePicker;
 import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 
+// TODO: Make sure the end date is at least 1 minute/hour after the start date
+
 public class HPDTime extends SherlockFragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
