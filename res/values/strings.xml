@@ -1,11 +1,13 @@
 <resources>
 
     <string name="app_name">Hoofdpijndagboek</string>
-    <string name="menu_settings">Instellingen</string>
+    <string name="menu_settings">instellingen</string>
     <string name="title_activity_main">Hoofdpijndagboek</string>
     <string name="versturen">opnemen in dagboek</string>
     <string name="pick_time">tijd</string>
     <string name="pick_date">datum</string>
+    <string name="start">begin</string>
+    <string name="end">eind</string>
     <string name="geur">geur</string>
     <string name="weer">weer</string>
     <string name="humeur">humeur</string>
@@ -24,7 +26,7 @@
     <string name="calendar_entry_title">Hoofdpijnaanval</string>
     <string name="calendar_pill_title">Hoofdpijnpil</string>
     <string name="ja">ja</string>
-    <string name="event_saved">Deze gebeurtenis is opgeslagen in de agenda.</string>
+    <string name="event_saved">deze gebeurtenis is opgeslagen in de agenda.</string>
     <string name="rows">weken horizontaal (rijen)</string>
     <string name="columns">weken verticaal (kolommen)</string>
     <string name="months_in_rows">maanden horizontaal</string>
@@ -32,8 +34,15 @@
     <string name="laag">laag</string>
     <string name="gemiddeld">gemiddeld</string>
     <string name="hoog">hoog</string>
+    <string name="begin">begin</string>
+    <string name="end">eind</string>
+    <string name="andere_afspraken">andere afspraken</string>
+    <string name="show_year_view">toon jaaroverzicht</string>
+    <string name="restart">Je moet de app herstarten om dit te laten werken</string>
+    <string name="select_csv_file">Kies een csv bestand</string>
 
     <string-array name="weather_array">
+        <item>niet relevant</item>
         <item>sneeuw</item>
         <item>zeer koud</item>
         <item>storm</item>
@@ -46,6 +55,7 @@
         <item>heet</item>
     </string-array>
     <string-array name="humeur_array">
+        <item>niet relevant</item>
         <item>opgewekt</item>
         <item>ontspannen</item>
         <item>vol energie</item>
@@ -57,16 +67,20 @@
         <item>gevoel van onmacht</item>
     </string-array>
 
-    <string name="menu_add">Voeg medicijn toe</string>
-    <string name="menu_edit">Bewerk medicijn</string>
-    <string name="menu_delete">Verwijder medicijn</string>
-    <string name="menu_edit_pills">Pillen</string>
-    <string name="menu_save">Sla op</string>
-    <string name="menu_new">Nieuw</string>
-    <string name="pill_name">Medicijn</string>
-    <string name="pill_number">Aantal</string>
-    <string name="pill_timing">Slikmoment</string>
-    <string name="pill_effect">Effect</string>
+    <string name="menu_add">voeg medicijn toe</string>
+    <string name="menu_edit">bewerk medicijn</string>
+    <string name="menu_delete">verwijder medicijn</string>
+    <string name="menu_edit_pills">pillen</string>
+    <string name="menu_save">sla op</string>
+    <string name="menu_new">nieuw</string>
+    <string name="save_headaches">opslaan</string>
+    <string name="import_headaches">importeren</string>
+    <string name="remove_headaches">verwijderen</string>
+    <string name="remove_pills">kill pill</string>
+    <string name="pill_name">medicijn</string>
+    <string name="pill_number">aantal</string>
+    <string name="pill_timing">slikmoment</string>
+    <string name="pill_effect">effect</string>
     <string name="short_date_time">dd-MMM-yy</string>
     <string name="long_date_time">dd-MMM-yy HH:mm</string>
     <string name="very_long_date_time">yyyy-MM-dd HH:mm</string>
@@ -78,11 +92,11 @@
     <string name="pill_hour">uur</string>
     <string name="pill_minutes">minuten</string>
     <string name="dialogOk">OK</string>
-    <string name="dialogCancel">Afbreken</string>
-    <string name="pill_new_medicin">Voeg een nieuw medicijn toe</string>
-    <string name="pill_new_message">De werkzame stof van het medicijn of de merknaam, een getal geeft het gehalte in mg van de werkzame stof weer</string>
-    <string name="pill_content_description">Ikoon geeft effect weer</string>
-    <string name="date_parse_error">Er is iets misgegaan met de opgeslagen datum.</string>
+    <string name="dialogCancel">afbreken</string>
+    <string name="pill_new_medicin">voeg een nieuw medicijn toe</string>
+    <string name="pill_new_message">de werkzame stof van het medicijn of de merknaam, een getal geeft het gehalte in mg van de werkzame stof weer</string>
+    <string name="pill_content_description">ikoon geeft effect weer</string>
+    <string name="date_parse_error">er is iets misgegaan met de opgeslagen datum.</string>
 
     <string-array name="pill_effect_array">
         <item>weet niet</item>
@@ -92,11 +106,14 @@
         <item>geen</item>
     </string-array>
 
-    <string name="settings">Instellingen</string>
-    <string name="attack_verification">Weet je het zeker?</string>
-	<string name="attack_starts_more_than_a_month_ago">Aanval begint meer dan een maand geleden</string>
-	<string name="attack_ends_in_the_future">Aanval eindigt in de toekomst</string>
-	<string name="attack_starts_in_the_future">Aanval begint in de toekomst</string>
-	<string name="attack_lasts_longer_than_one_week">Aanval duurt langer dan 1 week</string>
-	<string name="attack_overlaps_another_attack">Aanval valt samen met andere aanval</string>
+    <string name="settings">instellingen</string>
+    <string name="attack_verification">weet je het zeker?</string>
+    <string name="attack_starts_more_than_a_month_ago">aanval begint meer dan een maand geleden</string>
+    <string name="attack_ends_in_the_future">aanval eindigt in de toekomst</string>
+    <string name="attack_starts_in_the_future">aanval begint in de toekomst</string>
+    <string name="attack_lasts_longer_than_one_week">aanval duurt langer dan 1 week</string>
+    <string name="attack_overlaps_another_attack">aanval valt samen met andere aanval</string>
+    <string name="attack_start">aanval begint normaliter</string>
+    <string name="attack_length">aanval duurt normaliter</string>
+
 </resources>

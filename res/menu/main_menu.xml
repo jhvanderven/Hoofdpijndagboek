@@ -1,23 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/menu_save_headache"
-        android:title="@string/menu_save"
+
+    <item
+        android:id="@+id/menu_save_headache"
+        android:icon="@drawable/ic_menu_archive"
         android:orderInCategory="100"
         android:showAsAction="always"
-        android:icon="@drawable/ic_menu_archive"/>
-    <item android:id="@+id/menu_new_headache"
-        android:title="@string/menu_new"
+        android:title="@string/menu_save"/>
+    <item
+        android:id="@+id/menu_new_headache"
+        android:icon="@drawable/ic_menu_add"
         android:orderInCategory="100"
         android:showAsAction="always"
-        android:icon="@drawable/ic_menu_add"/>
-    <item android:id="@+id/menu_edit_pills"
-        android:title="@string/menu_edit_pills"
+        android:title="@string/menu_new"/>
+    <item
+        android:id="@+id/menu_edit_pills"
+        android:icon="@drawable/medicin2"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:icon="@drawable/medicin2"/>
-    <item android:id="@+id/menu_prefs"
-        android:title="@string/settings"
+        android:title="@string/menu_edit_pills"/>
+    <item
+        android:id="@+id/menu_prefs"
         android:orderInCategory="100"
         android:showAsAction="never"
-        />
+        android:title="@string/settings"/>
+    <item
+        android:id="@+id/menu_save_headaches"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/save_headaches"/>
+    <item
+        android:id="@+id/menu_import_headaches"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/import_headaches"/>
+    <item
+        android:id="@+id/menu_remove_headaches"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/remove_headaches"/>
+    <item
+        android:id="@+id/menu_remove_pills"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/remove_pills"/>
+
 </menu>

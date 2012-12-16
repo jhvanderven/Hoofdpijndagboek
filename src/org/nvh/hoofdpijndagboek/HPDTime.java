@@ -102,27 +102,6 @@ public class HPDTime extends SherlockFragmentActivity {
 			View v = inflater.inflate(R.layout.time_layout, container, false);
 			v.setTag(R.layout.time_layout);
 			ernst = (RadioGroup) v.findViewById(R.id.ernst);
-			// ArrayAdapter<CharSequence> adapter = ArrayAdapter
-			// .createFromResource(getActivity(), R.array.lgh_array,
-			// android.R.layout.simple_spinner_item);
-			// adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			// ernst.setAdapter(adapter);
-
-			final Calendar c = Calendar.getInstance();
-			c.add(Calendar.HOUR, -5);
-			startTimeHour = c.get(Calendar.HOUR_OF_DAY);
-			startTimeMinute = 0;// c.get(Calendar.MINUTE);
-			startDateDay = c.get(Calendar.DAY_OF_MONTH);
-			startDateMonth = c.get(Calendar.MONTH);
-			startDateYear = c.get(Calendar.YEAR);
-
-			endDateDay = startDateDay;
-			endDateMonth = startDateMonth;
-			endDateYear = startDateYear;
-			endTimeHour = startTimeHour + 4;
-			endTimeMinute = startTimeMinute;
-			// startDateTime = (TextView) v.findViewById(R.id.startDateTime);
-			// endDateTime = (TextView) v.findViewById(R.id.endDateTime);
 			startDate = (Button) v.findViewById(R.id.startDate);
 			startDate.setTag(R.id.startDate);
 			startDate.setOnClickListener(new OnClickListener() {
@@ -160,11 +139,12 @@ public class HPDTime extends SherlockFragmentActivity {
 
 				}
 			});
-			updateTimes(startDate, startTime, startDateYear, startDateMonth,
-					startDateDay, startTimeHour, startTimeMinute);
-			updateTimes(endDate, endTime, endDateYear, endDateMonth,
-					endDateDay, endTimeHour, endTimeMinute);
-
+			if (!HeadacheDiaryApp.getApp()
+					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0)
+					.getBoolean("pref_year_view", true)) {
+				View spark = v.findViewById(R.id.spark);
+				spark.setVisibility(View.GONE);
+			}
 			view = v;
 			return v;
 		}

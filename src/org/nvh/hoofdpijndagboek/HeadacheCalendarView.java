@@ -1,10 +1,8 @@
 package org.nvh.hoofdpijndagboek;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,10 +32,10 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SoundEffectConstants;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-
-// TODO: Cleanup unused code
+import android.widget.Toast;
 
 public class HeadacheCalendarView extends View implements OnGestureListener {
 	private GestureDetector gesturedetector;
@@ -538,17 +536,21 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 					Utils.parseDescription(description,
 							getContext().getString(R.string.ernst)));
 			if (ernst == 0) {
-				p.setColor(Color.MAGENTA);
+				p.setColor(getContext().getSharedPreferences(
+						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_low", 0));
 			} else if (ernst == 1) {
-				p.setColor(Color.YELLOW);
+				p.setColor(getContext().getSharedPreferences(
+						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_average", 0));
 			} else if (ernst == 2) {
-				p.setColor(Color.RED);
+				p.setColor(getContext().getSharedPreferences(
+						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_high", 0));
 			}
 		} else if (title.equalsIgnoreCase(getContext().getString(
 				R.string.calendar_pill_title))) {
 			p.setColor(Color.WHITE);
 		} else {
-			p.setColor(Color.LTGRAY);
+			p.setColor(getContext().getSharedPreferences(
+					Utils.GENERAL_PREFS_NAME, 0).getInt("pref_other", 0));
 		}
 	}
 
@@ -615,82 +617,55 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	@Override
 	public boolean onSingleTapUp(MotionEvent e) {
 		// are there relevant events in the calendar?
-		// TODO: Depending on the number of days we are displaying
-		// we may want to extend the days with neighbouring dates.
 		Calendar[] days = new Calendar[1];
 		days[0] = this.cell.getDate(e.getX() / this.getWidth(),
 				e.getY() / this.getHeight());
-		List<String> hits = Utils.getEvents(
+		final List<String> hits = Utils.getEvents(
 				getContext().getString(R.string.calendar_entry_title), days,
 				getContext().getContentResolver());
 		if (hits.size() > 0) {
-			// Get instance of Vibrator from current Context
-			// Vibrator v = (Vibrator)
-			// getContext().getSystemService(Context.VIBRATOR_SERVICE);
-			// v.vibrate(50);
 			HeadacheCalendarView.this
 					.playSoundEffect(SoundEffectConstants.CLICK);
-			HeadacheAttack attack = ((MainActivity) getContext()).getAttack();
-			String description = hits.get(0);
+			final HeadacheAttack attack = ((MainActivity) getContext()).getAttack();
+			if (hits.size() == 1) {
+				showAttack(hits.get(0), attack);
+			} else {
+				// we need to popup a list dialog
+				List<String> summary = Utils.createSummary(hits, getContext());
+				AlertDialog.Builder builder = new AlertDialog.Builder(
+						getContext());
+				builder.setTitle("Meerdere aanvallen op deze dag");
+				builder.setAdapter(new ArrayAdapter<String>(getContext(),
+						android.R.layout.simple_list_item_1, summary),
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,
+									int which) {
+								showAttack(hits.get(which), attack);
+							}
+						});
+				AlertDialog dialog = builder.create();
+				dialog.show();
 
-			// this should go into utils
-			attack.start = handleDateAndTime(description, "begin");
-			attack.end = handleDateAndTime(description, "end");
-			attack.ernst = Utils.parseDescription(description, getContext()
-					.getString(R.string.ernst));
-			attack.leftPainPoints = Utils.parseDescriptionOuch(description,
-					getContext().getString(R.string.left), getContext()
-							.getString(R.string.ouch));
-			attack.rightPainPoints = Utils.parseDescriptionOuch(description,
-					getContext().getString(R.string.right), getContext()
-							.getString(R.string.ouch));
-			attack.misselijk = Utils.parseDescription(description,
-					getContext().getString(R.string.misselijk))
-					.equalsIgnoreCase(getContext().getString(R.string.ja));
-			attack.menstruatie = Utils.parseDescription(description,
-					getContext().getString(R.string.menstruatie))
-					.equalsIgnoreCase(getContext().getString(R.string.ja));
-			attack.doorslapen = Utils.parseDescription(description,
-					getContext().getString(R.string.doorslapen))
-					.equalsIgnoreCase(getContext().getString(R.string.ja));
-			attack.duizelig = Utils.parseDescription(description,
-					getContext().getString(R.string.duizelig))
-					.equalsIgnoreCase(getContext().getString(R.string.ja));
-			attack.geur = Utils.parseDescription(description,
-					getContext().getString(R.string.geur)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
-			attack.inslapen = Utils.parseDescription(description,
-					getContext().getString(R.string.inslapen))
-					.equalsIgnoreCase(getContext().getString(R.string.ja));
-			attack.licht = Utils.parseDescription(description,
-					getContext().getString(R.string.licht)).equalsIgnoreCase(
-					getContext().getString(R.string.ja));
-			attack.stoelgang = Utils.parseDescription(description,
-					getContext().getString(R.string.stoelgang))
-					.equalsIgnoreCase(getContext().getString(R.string.ja));
-			attack.humeur = Utils.parseDescription(description, getContext()
-					.getString(R.string.humeur));
-			attack.weer = Utils.parseDescription(description, getContext()
-					.getString(R.string.weer));
-			((MainActivity) getContext()).setWorkingOnNewHeadache(false);
-			((MainActivity) getContext()).repaintTabs();
+			}
+			
 		}
-
-		// TODO: Handle multiple hits by showing a list
 		return true;
 	}
 
-	private Calendar handleDateAndTime(String description, String field) {
-		String start = Utils.parseDescription(description, field);
-		Date aDate;
+	private void showAttack(String description, HeadacheAttack attack) {
 		try {
-			aDate = Utils.parse(start,
-					getContext().getString(R.string.very_long_date_time));
-			Calendar c = Calendar.getInstance();
-			c.setTimeInMillis(aDate.getTime());
-			return c;
-		} catch (ParseException e1) {
+			Utils.readAttack(attack, description, getContext());
+			Toast toast = Toast.makeText(
+					getContext(),
+					Utils.format(attack.start) + " - "
+							+ Utils.format(attack.end), Toast.LENGTH_LONG);
+			// toast.getView().setBackgroundColor(Utils.getColor(attack.ernst, getContext()));
+			toast.show();
+			((MainActivity) getContext()).setWorkingOnNewHeadache(false);
+			((MainActivity) getContext()).repaintTabs();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return null;
 	}
 }

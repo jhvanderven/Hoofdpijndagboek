@@ -1,5 +1,6 @@
 package org.nvh.hoofdpijndagboek;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -19,12 +20,15 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TabHost;
@@ -139,14 +143,25 @@ public class MainActivity extends SherlockFragmentActivity {
 	private void initializeAttack() {
 		HeadacheAttack a = getAttack();
 		Calendar c = Calendar.getInstance();
-		c.add(Calendar.HOUR, -5);
+		c.add(Calendar.HOUR_OF_DAY, Integer.valueOf(HeadacheDiaryApp.getApp().getSharedPreferences(
+				Utils.GENERAL_PREFS_NAME, 0).getString("pref_attack_start", "-5")));
 		c.set(Calendar.MINUTE, 0);
 		a.start = c;
 		a.end = (Calendar) c.clone();
-		a.end.add(Calendar.HOUR_OF_DAY, 4);
+		a.end.add(Calendar.HOUR_OF_DAY, Integer.valueOf(HeadacheDiaryApp.getApp().getSharedPreferences(
+				Utils.GENERAL_PREFS_NAME, 0).getString("pref_attack_length", "4")));
 		a.leftPainPoints = new ArrayList<PainPoint>();
 		a.rightPainPoints = new ArrayList<PainPoint>();
 		a.misselijk = false;
+		a.menstruatie = false;
+		a.doorslapen = false;
+		a.duizelig = false;
+		a.geur = false;
+		a.humeur = "";
+		a.inslapen = false;
+		a.licht = false;
+		a.stoelgang = false;
+		a.weer = "";
 		a.ernst = getString(R.string.laag);
 	}
 
@@ -200,6 +215,18 @@ public class MainActivity extends SherlockFragmentActivity {
 	}
 
 	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    // Check which request we're responding to
+	    if (requestCode == 123) {
+	        // Make sure the request was successful
+	        if (resultCode == RESULT_OK) {
+	        	Toast.makeText(getApplicationContext(), data.getDataString(), Toast.LENGTH_LONG).show();
+	        	Utils.importHeadaches(data.getData(), this);
+	        }
+	    }
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// we have to gather the information from all the tabs and
 		// create one or more (medication) entries in the calendar
@@ -216,6 +243,53 @@ public class MainActivity extends SherlockFragmentActivity {
 			// repaint current screen
 			repaintTabs();
 			invalidateOptionsMenu();
+			return true;
+		case R.id.menu_import_headaches:
+			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+			intent.setType("text/csv");
+
+			// Do this if you need to be able to open the returned URI as a stream
+			// (for example here to read the image data).
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			//intent.addCategory(Intent.EXTRA_LOCAL_ONLY);
+			Intent finalIntent = Intent.createChooser(intent, getString(R.string.select_csv_file));
+			startActivityForResult(finalIntent, 123);
+			return true;
+		case R.id.menu_save_headaches:
+			// save all headaches to disk
+			File path = Environment
+					.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+			Calendar now = Calendar.getInstance();
+			File file = new File(path, String.format("%s-%s.csv",
+					getString(R.string.app_name), Utils.formatNoSeparators(now)));
+			Utils.saveHeadacheEvents(file, this);
+			Toast.makeText(this, file.getAbsolutePath(), Toast.LENGTH_LONG)
+					.show();
+	        // Tell the media scanner about the new file so that it is
+	        // immediately available to the user.
+	        MediaScannerConnection.scanFile(this,
+	                new String[] { file.toString() }, null,
+	                new MediaScannerConnection.OnScanCompletedListener() {
+	            public void onScanCompleted(String path, Uri uri) {
+	                Log.i("ExternalStorage", "Scanned " + path + ":");
+	                Log.i("ExternalStorage", "-> uri=" + uri);
+	            }
+	        });
+			file = new File(path, String.format("%s-%s.csv",
+					getString(R.string.calendar_pill_title), Utils.formatNoSeparators(now)));
+			Utils.savePillEvents(file, this);
+			Toast.makeText(this, file.getAbsolutePath(), Toast.LENGTH_LONG)
+					.show();
+	        // Tell the media scanner about the new file so that it is
+	        // immediately available to the user.
+	        MediaScannerConnection.scanFile(this,
+	                new String[] { file.toString() }, null,
+	                new MediaScannerConnection.OnScanCompletedListener() {
+	            public void onScanCompleted(String path, Uri uri) {
+	                Log.i("ExternalStorage", "Scanned " + path + ":");
+	                Log.i("ExternalStorage", "-> uri=" + uri);
+	            }
+	        });
 			return true;
 		case R.id.menu_save_headache:
 			// TODO: Warn about strange entries, such as:
@@ -334,16 +408,13 @@ public class MainActivity extends SherlockFragmentActivity {
 		if ((now.getTimeInMillis() - start.getTimeInMillis()) > (30L * 24 * 60 * 60 * 1000)) {
 			// headaches starting more than a month ago
 			message = getString(R.string.attack_starts_more_than_a_month_ago);
-		}
-		else if (stop.getTimeInMillis() > now.getTimeInMillis()) {
+		} else if (stop.getTimeInMillis() > now.getTimeInMillis()) {
 			// headaches ending in the future
 			message = getString(R.string.attack_ends_in_the_future);
-		}
-		else if (start.getTimeInMillis() > now.getTimeInMillis()) {
+		} else if (start.getTimeInMillis() > now.getTimeInMillis()) {
 			// headaches starting in the future
 			message = getString(R.string.attack_starts_in_the_future);
-		}
-		else if ((stop.getTimeInMillis() - start.getTimeInMillis()) > (7L * 24 * 60 * 60 * 1000)) {
+		} else if ((stop.getTimeInMillis() - start.getTimeInMillis()) > (7L * 24 * 60 * 60 * 1000)) {
 			// headaches lasting longer than a week
 			message = getString(R.string.attack_lasts_longer_than_one_week);
 		} else {
@@ -380,7 +451,7 @@ public class MainActivity extends SherlockFragmentActivity {
 		HPDHeadRight.HurtingFragmentRight.pleaseUpdate(getAttack());
 	}
 
-	private String getLocation() {
+	public String getLocation() {
 		if (here == null) {
 			return "";
 		} else {

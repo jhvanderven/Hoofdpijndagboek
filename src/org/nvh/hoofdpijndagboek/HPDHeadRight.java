@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -67,28 +68,10 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 						.append(";")
 						.append(String.format(Locale.US, "%1.3f",
 								p.y / view.getHeight())).append(";")
-						.append(p.color).append("\n");
+						.append(p.colorIndex).append("\n");
 
 			}
 			return sb.toString();
-		}
-
-		public static int getErnst() {
-			int hoog = 0;
-			int gemiddeld = 0;
-			int laag = 0;
-			for (PainPoint p : points) {
-				if (p.color == Color.RED) {
-					hoog++;
-				} else if (p.color == Color.MAGENTA) {
-					gemiddeld++;
-				} else {
-					laag++;
-				}
-			}
-
-			return Math.round((hoog * 3 + gemiddeld * 2 + laag)
-					/ (float) points.size());
 		}
 
 		// storedPoints are in fractions of the width and height and have no
@@ -136,10 +119,10 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
-			// this fixes the tablet: allthough the dpi == 160 it has more pixels
-			// so it loads the wrong bitmap (because of the API level?) and
-			// we have to stretch it. An svg version of the head would work
-			// faster?
+			SharedPreferences sp = HeadacheDiaryApp.getApp().getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
+			ernst[0] = sp.getInt("pref_low", 0);
+			ernst[1] = sp.getInt("pref_average", 0);
+			ernst[2] = sp.getInt("pref_high", 0);
 			Bitmap.createScaledBitmap(b, getWidth(), getHeight(), false);
 			dest = new Rect(0, 0, getWidth(), getHeight());
 			MainActivity m = (MainActivity) getContext();
@@ -149,7 +132,7 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 			int w = getWidth();
 			int h = getHeight();
 			for (PainPoint p : points) {
-				paint.setColor(p.color);
+				paint.setColor(ernst[p.colorIndex]);
 				if (p.x < 1 && p.y < 1) {
 					// not multiplied by width and height
 					p.x *= w;
@@ -192,7 +175,7 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 			PainPoint p = new PainPoint();
 			p.x = e.getX();
 			p.y = e.getY();
-			p.color = ernst[0];
+			p.colorIndex = 0;
 			p.size = getWidth() / 10;
 			points.add(p);
 			lastPoint = p;
@@ -214,12 +197,12 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 				if (square_dist < Math.pow(points.get(i).size, 2)) {
 					newPain = false; // an old point under the finger
 					for (int c = 0; c < 3; c++) {
-						if (points.get(i).color == ernst[c]) {
+						if (points.get(i).colorIndex == c) {
 							if (c == ernst.length - 1) {
 								points.remove(points.get(i));
 								i--; // fool the loop
 							} else {
-								points.get(i).color = ernst[c + 1];
+								points.get(i).colorIndex = c + 1;
 								break;
 							}
 						}
@@ -228,7 +211,7 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 				i++;
 			}
 			if (newPain) {
-				p.color = ernst[0];
+				p.colorIndex = 0;
 				p.size = getWidth() / 10;
 				points.add(p);
 			}

@@ -2,9 +2,11 @@ package org.nvh.hoofdpijndagboek;
 
 import java.util.Calendar;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -39,6 +41,7 @@ public class HeadacheSparkView extends View {
 		dpe = new DashPathEffect(new float[] { 5, 5 }, 1);
 	}
 
+	@SuppressLint("DrawAllocation")
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
@@ -52,6 +55,11 @@ public class HeadacheSparkView extends View {
 		canvas.drawPaint(p);
 		int[] colors = new int[] { Color.WHITE, Color.MAGENTA, Color.YELLOW,
 				Color.RED };
+		SharedPreferences sp = HeadacheDiaryApp.getApp().getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
+		colors[0] = sp.getInt("pref_other", 0);
+		colors[1] = sp.getInt("pref_low", 0);
+		colors[2] = sp.getInt("pref_average", 0);
+		colors[3] = sp.getInt("pref_high", 0);
 		// somehow I am for green axes
 		p.setColor(Color.LTGRAY);
 		canvas.drawLine(xoff, yoff, xoff, h - yoff, p);
@@ -69,7 +77,6 @@ public class HeadacheSparkView extends View {
 		}
 		p.setPathEffect(null);
 		p.setStrokeWidth(1);
-		p.setColor(Color.YELLOW);
 		p.setStyle(Style.FILL);
 		ContentResolver contentResolver = getContext().getContentResolver();
 		Calendar cal = Calendar.getInstance();
@@ -85,6 +92,9 @@ public class HeadacheSparkView extends View {
 
 		long xmin = cal.getTimeInMillis();
 		long xmax = Calendar.getInstance().getTimeInMillis();
+		if(eventCursor == null){
+			return;
+		}
 		if (eventCursor.getCount() > 0) {
 			while (eventCursor.moveToNext()) {
 				if (eventCursor.getString(0).equalsIgnoreCase(

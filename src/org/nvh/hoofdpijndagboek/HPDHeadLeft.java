@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -24,8 +25,7 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 
 public class HPDHeadLeft extends SherlockFragmentActivity {
 	public static List<PainPoint> points = new ArrayList<PainPoint>();
-	protected static int[] ernst = new int[] { Color.YELLOW, Color.MAGENTA,
-			Color.RED };
+	protected static int[] ernst = new int[] { Color.YELLOW, Color.MAGENTA, Color.RED };
 	protected static PainPoint lastPoint;
 
 	public static class HurtingFragmentLeft extends SherlockFragment {
@@ -38,14 +38,15 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 			return view;
 		}
 
-		public static void pleaseUpdate(HeadacheAttack a){
+		public static void pleaseUpdate(HeadacheAttack a) {
 			points = a.leftPainPoints;
-			if(view!=null)view.invalidate();
+			if (view != null)
+				view.invalidate();
 		}
-		
+
 		@Override
 		public void onResume() {
-			points = ((MainActivity)getActivity()).getAttack().leftPainPoints;
+			points = ((MainActivity) getActivity()).getAttack().leftPainPoints;
 			super.onResume();
 		}
 
@@ -60,28 +61,10 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 						.append(";")
 						.append(String.format(Locale.US, "%1.3f",
 								p.y / view.getHeight())).append(";")
-						.append(p.color).append("\n");
+						.append(p.colorIndex).append("\n");
 
 			}
 			return sb.toString();
-		}
-
-		public static int getErnst() {
-			int hoog = 0;
-			int gemiddeld = 0;
-			int laag = 0;
-			for (PainPoint p : points) {
-				if (p.color == Color.RED) {
-					hoog++;
-				} else if (p.color == Color.MAGENTA) {
-					gemiddeld++;
-				} else {
-					laag++;
-				}
-			}
-
-			return Math.round((hoog * 3 + gemiddeld * 2 + laag)
-					/ (float) points.size());
 		}
 
 		// storedPoints are in fractions of the width and height and have no
@@ -126,21 +109,26 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
+			SharedPreferences sp = HeadacheDiaryApp.getApp().getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
+			ernst[0] = sp.getInt("pref_low", 0);
+			ernst[1] = sp.getInt("pref_average", 0);
+			ernst[2] = sp.getInt("pref_high", 0);
 			Bitmap.createScaledBitmap(b, getWidth(), getHeight(), false);
 			dest = new Rect(0, 0, getWidth(), getHeight());
 			MainActivity m = (MainActivity) getContext();
 			points = m.getPainPoints(0);
 			canvas.drawBitmap(b, null, dest, paint);
-			if(points==null)return;
+			if (points == null)
+				return;
 			int w = getWidth();
 			int h = getHeight();
 			for (PainPoint p : points) {
-				paint.setColor(p.color);
+				paint.setColor(ernst[p.colorIndex]);
 				if (p.x < 1 && p.y < 1) {
 					// not multiplied by width and height
 					p.x *= w;
 					p.y *= h;
-					p.size = w/10;
+					p.size = w / 10;
 				}
 				canvas.drawCircle(p.x, p.y, p.size, paint);
 			}
@@ -178,7 +166,7 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 			PainPoint p = new PainPoint();
 			p.x = e.getX();
 			p.y = e.getY();
-			p.color = ernst[0];
+			p.colorIndex = 0;
 			p.size = getWidth() / 10;
 			points.add(p);
 			lastPoint = p;
@@ -200,12 +188,12 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 				if (square_dist < Math.pow(points.get(i).size, 2)) {
 					newPain = false; // an old point under the finger
 					for (int c = 0; c < 3; c++) {
-						if (points.get(i).color == ernst[c]) {
+						if (points.get(i).colorIndex == c) {
 							if (c == ernst.length - 1) {
 								points.remove(points.get(i));
 								i--; // fool the loop
 							} else {
-								points.get(i).color = ernst[c + 1];
+								points.get(i).colorIndex = c + 1;
 								break;
 							}
 						}
@@ -214,7 +202,7 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 				i++;
 			}
 			if (newPain) {
-				p.color = ernst[0];
+				p.colorIndex = 0;
 				p.size = getWidth() / 10;
 				points.add(p);
 			}
