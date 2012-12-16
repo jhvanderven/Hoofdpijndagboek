@@ -292,7 +292,6 @@ public class MainActivity extends SherlockFragmentActivity {
 	        });
 			return true;
 		case R.id.menu_save_headache:
-			// TODO: Warn about strange entries, such as:
 			// headaches starting more than a year ago
 			// headaches ending in the future
 			// headaches starting in the future
@@ -306,7 +305,7 @@ public class MainActivity extends SherlockFragmentActivity {
 			Calendar start = Calendar.getInstance();
 			try {
 				start.setTimeInMillis(Utils.parse(startDateTime,
-						"yyyy-MM-dd HH:mm").getTime());
+						getString(R.string.very_long_date_time)).getTime());
 			} catch (ParseException e1) {
 				return true;
 			}
@@ -318,7 +317,7 @@ public class MainActivity extends SherlockFragmentActivity {
 			Calendar stop = Calendar.getInstance();
 			try {
 				stop.setTimeInMillis(Utils.parse(endDateTime,
-						"yyyy-MM-dd HH:mm").getTime());
+						getString(R.string.very_long_date_time)).getTime());
 			} catch (ParseException e1) {
 				return true;
 			}

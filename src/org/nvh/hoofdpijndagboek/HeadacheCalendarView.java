@@ -300,24 +300,10 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 		}
 		p.setTextSize(Math.min(ystep - 5, xstep - 2));
 
-		// bottom-right is today
-		// highlight(canvas, xstep, ystep, Calendar.MONDAY, Color.CYAN, false);
 		highlight(canvas, xstep, ystep, Calendar.SATURDAY,
 				Color.argb(128, 192, 192, 192), true);
 		highlight(canvas, xstep, ystep, Calendar.SUNDAY,
 				Color.argb(128, 255, 192, 192), true);
-
-		// use this to set the day of the month in each cell
-		// cal = Calendar.getInstance();
-		// for (int d = 0; d <= 350; d++) {
-		// Cell c = getCell(cal);
-		// // canvas.drawText(df.format(cal.getTime()), c.i * xstep + 5, -3 +
-		// // ((c.j) * ystep), p);
-		// canvas.drawText(
-		// new Integer(cal.get(Calendar.DAY_OF_MONTH)).toString(), c.i
-		// * xstep + 5, -3 + ((c.j+1) * ystep), p);
-		// cal.add(Calendar.DAY_OF_YEAR, -1);
-		// }
 
 		ContentResolver contentResolver = getContext().getContentResolver();
 		calendarEvents.clear();
@@ -434,11 +420,6 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 							}
 						}
 					} else {
-						// we try to show smaller rectangles at the correct time
-						// using transparency we handle overlaps
-						// I am not for this, they are too small, and
-						// if we keep them from overlapping (later) they
-						// will only get smaller.
 						width = xstep - 2;
 						for (CalendarEvent event : calendarEvents.get(millis)) {
 							if (!event.title.equalsIgnoreCase(getContext()
@@ -529,6 +510,7 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	}
 
 	private void setColor(String[] lgh, String description, String title) {
+		// TODO: Find a way to read the preferences only when they change.
 		if (title.equalsIgnoreCase(getContext().getString(
 				R.string.calendar_entry_title))) {
 			int ernst = Utils.getArrayIndex(
@@ -553,30 +535,6 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 					Utils.GENERAL_PREFS_NAME, 0).getInt("pref_other", 0));
 		}
 	}
-
-	//
-	// private void addEvent(int m_selectedCalendarId) {
-	// ContentValues l_event = new ContentValues();
-	// l_event.put("calendar_id", m_selectedCalendarId);
-	// l_event.put("title", "roman10 calendar tutorial test");
-	// l_event.put("description", "This is a simple test for calendar api");
-	// l_event.put("eventLocation", "@home");
-	// l_event.put("dtstart", System.currentTimeMillis());
-	// l_event.put("dtend", System.currentTimeMillis() + 1800 * 1000);
-	// l_event.put("allDay", 0);
-	// // status: 0~ tentative; 1~ confirmed; 2~ canceled
-	// l_event.put("eventStatus", 1);
-	// // 0~ default; 1~ confidential; 2~ private; 3~ public
-	// l_event.put("visibility", 0);
-	// // 0~ opaque, no timing conflict is allowed; 1~ transparency, allow
-	// // overlap of scheduling
-	// l_event.put("transparency", 0);
-	// // 0~ false; 1~ true
-	// l_event.put("hasAlarm", 1);
-	// Uri l_eventUri;
-	// l_eventUri = Uri.parse("content://com.android.calendar/events");
-	// // Uri l_uri = this.getContentResolver().insert(l_eventUri, l_event);
-	// }
 
 	@Override
 	public boolean onDown(MotionEvent e) {
@@ -655,16 +613,13 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 	private void showAttack(String description, HeadacheAttack attack) {
 		try {
 			Utils.readAttack(attack, description, getContext());
-			Toast toast = Toast.makeText(
+			Toast.makeText(
 					getContext(),
 					Utils.format(attack.start) + " - "
-							+ Utils.format(attack.end), Toast.LENGTH_LONG);
-			// toast.getView().setBackgroundColor(Utils.getColor(attack.ernst, getContext()));
-			toast.show();
+							+ Utils.format(attack.end), Toast.LENGTH_LONG).show();
 			((MainActivity) getContext()).setWorkingOnNewHeadache(false);
 			((MainActivity) getContext()).repaintTabs();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

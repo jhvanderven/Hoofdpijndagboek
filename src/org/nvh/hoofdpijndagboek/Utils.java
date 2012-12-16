@@ -389,7 +389,7 @@ public class Utils {
 							p.colorIndex = 0;
 						} else if (p.colorIndex == -65536) {
 							p.colorIndex = 2;
-						} else {
+						} else if (p.colorIndex == -65281) {
 							p.colorIndex = 1;
 						}
 						points.add(p);

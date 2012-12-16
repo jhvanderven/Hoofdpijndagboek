@@ -53,8 +53,7 @@ public class HeadacheSparkView extends View {
 		p.setColor(Color.BLACK);
 		p.setStyle(Style.FILL);
 		canvas.drawPaint(p);
-		int[] colors = new int[] { Color.WHITE, Color.MAGENTA, Color.YELLOW,
-				Color.RED };
+		int[] colors = new int[4];
 		SharedPreferences sp = HeadacheDiaryApp.getApp().getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
 		colors[0] = sp.getInt("pref_other", 0);
 		colors[1] = sp.getInt("pref_low", 0);
@@ -78,6 +77,8 @@ public class HeadacheSparkView extends View {
 		p.setPathEffect(null);
 		p.setStrokeWidth(1);
 		p.setStyle(Style.FILL);
+		
+		// TODO: Move content related to Utils.
 		ContentResolver contentResolver = getContext().getContentResolver();
 		Calendar cal = Calendar.getInstance();
 		Uri.Builder builder = Uri.parse(calendarURI + "instances/when/")

@@ -64,6 +64,7 @@ public class HeadacheAttack {
 		}
 
 		if (this.leftPainPoints != null) {
+			sb.append(context.getString(R.string.left)).append(":").append(context.getString(R.string.ouch));
 			for (int i = 0; i < leftPainPoints.size(); i++) {
 				PainPoint p = leftPainPoints.get(i);
 				sb.append("au").append(":")
@@ -75,6 +76,7 @@ public class HeadacheAttack {
 			}
 		}
 		if (this.rightPainPoints != null) {
+			sb.append(context.getString(R.string.right)).append(":").append(context.getString(R.string.ouch));
 			for (int i = 0; i < rightPainPoints.size(); i++) {
 				PainPoint p = rightPainPoints.get(i);
 				sb.append("au").append(":")
