@@ -97,11 +97,6 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
-			SharedPreferences sp = HeadacheDiaryApp.getApp()
-					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
-			ernst[0] = sp.getInt("pref_low", 0);
-			ernst[1] = sp.getInt("pref_average", 0);
-			ernst[2] = sp.getInt("pref_high", 0);
 			Bitmap.createScaledBitmap(b, getWidth(), getHeight(), false);
 			dest = new Rect(0, 0, getWidth(), getHeight());
 			MainActivity m = (MainActivity) getContext();
@@ -111,6 +106,11 @@ public class HPDHeadRight extends SherlockFragmentActivity {
 				return;
 			int w = getWidth();
 			int h = getHeight();
+			SharedPreferences sp = HeadacheDiaryApp.getApp()
+					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
+			ernst[0] = sp.getInt("pref_low", 0xffffff00);
+			ernst[1] = sp.getInt("pref_average", 0xffff00ff);
+			ernst[2] = sp.getInt("pref_high", 0xffff0000);
 			for (PainPoint p : points) {
 				paint.setColor(ernst[p.colorIndex]);
 				canvas.drawCircle(p.x * w, p.y * h, w / 10, paint);

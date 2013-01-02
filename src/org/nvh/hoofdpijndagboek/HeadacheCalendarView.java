@@ -518,20 +518,20 @@ public class HeadacheCalendarView extends View implements OnGestureListener {
 			}
 			if (ernst == 0) {
 				p.setColor(getContext().getSharedPreferences(
-						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_low", 0));
+						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_low", 0xffffff00));
 			} else if (ernst == 1) {
 				p.setColor(getContext().getSharedPreferences(
-						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_average", 0));
+						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_average", 0xffff00ff));
 			} else if (ernst == 2) {
 				p.setColor(getContext().getSharedPreferences(
-						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_high", 0));
+						Utils.GENERAL_PREFS_NAME, 0).getInt("pref_high", 0xffff0000));
 			}
 		} else if (title.equalsIgnoreCase(getContext().getString(
 				R.string.calendar_pill_title))) {
 			p.setColor(Color.WHITE);
 		} else {
 			p.setColor(getContext().getSharedPreferences(
-					Utils.GENERAL_PREFS_NAME, 0).getInt("pref_other", 0));
+					Utils.GENERAL_PREFS_NAME, 0).getInt("pref_other", 0xff888888));
 		}
 	}
 

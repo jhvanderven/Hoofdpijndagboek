@@ -5,23 +5,33 @@
         android:key="pref_key_calendar_settings"
         android:title="Kalender" >
         <org.nvh.hoofdpijndagboek.ColorPreference
+            android:defaultValue="0xffffff00"
             android:key="pref_low"
             android:summary="ffffff00"
             android:title="@string/laag" />
         <org.nvh.hoofdpijndagboek.ColorPreference
+            android:defaultValue="4294902015"
             android:key="pref_average"
             android:summary="ffff00ff"
             android:title="@string/gemiddeld" />
         <org.nvh.hoofdpijndagboek.ColorPreference
+            android:defaultValue="4294901760"
             android:key="pref_high"
             android:summary="ffff0000"
             android:title="@string/hoog" />
         <org.nvh.hoofdpijndagboek.ColorPreference
+            android:defaultValue="4287137928"
             android:key="pref_other"
             android:summary="ff888888"
             android:title="@string/andere_afspraken" />
-        <EditTextPreference android:key="pref_attack_start" android:defaultValue="-5" android:title="@string/attack_start"/>
-        <EditTextPreference android:defaultValue="4" android:key="pref_attack_length" android:title="@string/attack_length"/>
+        <EditTextPreference
+            android:defaultValue="-5"
+            android:key="pref_attack_start"
+            android:title="@string/attack_start" />
+        <EditTextPreference
+            android:defaultValue="4"
+            android:key="pref_attack_length"
+            android:title="@string/attack_length" />
     </PreferenceCategory>
 
 </PreferenceScreen>

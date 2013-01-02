@@ -73,10 +73,8 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 		public HeadViewLeft(FragmentActivity activity, int pictureID,
 				SherlockFragment hurtingFragment) {
 			super(activity);
-			BitmapFactory.Options opts = new BitmapFactory.Options();
-			opts.inScaled = false;
 			Bitmap bImm = BitmapFactory.decodeResource(getResources(),
-					pictureID, opts);
+					pictureID);
 			b = bImm.copy(Bitmap.Config.ARGB_8888, true);
 			paint = new Paint();
 			gesturedetector = new GestureDetector(activity, this);
@@ -91,11 +89,6 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
-			SharedPreferences sp = HeadacheDiaryApp.getApp()
-					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
-			ernst[0] = sp.getInt("pref_low", 0);
-			ernst[1] = sp.getInt("pref_average", 0);
-			ernst[2] = sp.getInt("pref_high", 0);
 			Bitmap.createScaledBitmap(b, getWidth(), getHeight(), false);
 			dest = new Rect(0, 0, getWidth(), getHeight());
 			MainActivity m = (MainActivity) getContext();
@@ -104,6 +97,11 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 			if (points == null) {
 				return;
 			}
+			SharedPreferences sp = HeadacheDiaryApp.getApp()
+					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
+			ernst[0] = sp.getInt("pref_low", 0xffffff00);
+			ernst[1] = sp.getInt("pref_average", 0xffff00ff);
+			ernst[2] = sp.getInt("pref_high", 0xffff0000);
 			int w = getWidth();
 			int h = getHeight();
 			for (PainPoint p : points) {
