@@ -13,15 +13,11 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
 import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
-
-// TODO: Make sure the end date is at least 1 minute/hour after the start date
 
 public class HPDTime extends SherlockFragmentActivity {
 	@Override
@@ -32,14 +28,11 @@ public class HPDTime extends SherlockFragmentActivity {
 	}
 
 	public static class TimingFragment extends SherlockFragment {
-		private static View view;
 
 		public static Button startTime;
 		public static Button startDate;
 		public static Button endTime;
 		public static Button endDate;
-
-		public static RadioGroup ernst;
 
 		private static int startDateYear;
 		private static int startDateMonth;
@@ -52,47 +45,30 @@ public class HPDTime extends SherlockFragmentActivity {
 		private static int endTimeHour;
 		private static int endTimeMinute;
 
-		public static String getData() {
-			StringBuilder sb = new StringBuilder();
-			sb.append(view.getContext().getString(R.string.ernst)).append(":");
-			RadioButton b = (RadioButton) view.findViewById(ernst
-					.getCheckedRadioButtonId());
-			sb.append(b.getText()).append("\n");
-			return sb.toString();
+		public static void pleaseUpdate(HeadacheAttack a) {
+			update(a);
 		}
 
-		public static void pleaseUpdate(HeadacheAttack a, String[] lgh) {
-			update(a, lgh);
-		}
-
-		private static void update(HeadacheAttack a, String[] lgh) {
-			int id;
-			if (a.ernst.equalsIgnoreCase(lgh[0])) {
-				id = R.id.laag;
-			} else if (a.ernst.equalsIgnoreCase(lgh[1])) {
-				id = R.id.gemiddeld;
-			} else {
-				id = R.id.hoog;
-			}
-			RadioButton b = (RadioButton) view.findViewById(id);
-			b.setChecked(true);
-			updateTimes(startDate, startTime, a.start.get(Calendar.YEAR),
-					a.start.get(Calendar.MONTH),
-					a.start.get(Calendar.DAY_OF_MONTH),
-					a.start.get(Calendar.HOUR_OF_DAY),
-					a.start.get(Calendar.MINUTE));
-			updateTimes(endDate, endTime, a.end.get(Calendar.YEAR),
-					a.end.get(Calendar.MONTH),
-					a.end.get(Calendar.DAY_OF_MONTH),
-					a.end.get(Calendar.HOUR_OF_DAY), a.end.get(Calendar.MINUTE));
+		private static void update(HeadacheAttack a) {
+			startDateYear = a.start.get(Calendar.YEAR);
+			startDateMonth = a.start.get(Calendar.MONTH);
+			startDateDay = a.start.get(Calendar.DAY_OF_MONTH);
+			startTimeHour = a.start.get(Calendar.HOUR_OF_DAY);
+			startTimeMinute = a.start.get(Calendar.MINUTE);
+			updateTimes(startDate, startTime, startDateYear, startDateMonth,
+					startDateDay, startTimeHour, startTimeMinute);
+			endDateYear = a.end.get(Calendar.YEAR);
+			endDateMonth = a.end.get(Calendar.MONTH);
+			endDateDay = a.end.get(Calendar.DAY_OF_MONTH);
+			endTimeHour = a.end.get(Calendar.HOUR_OF_DAY);
+			endTimeMinute = a.end.get(Calendar.MINUTE);
+			updateTimes(endDate, endTime, endDateYear, endDateMonth,
+					endDateDay, endTimeHour, endTimeMinute);
 		}
 
 		@Override
 		public void onResume() {
-			update(((MainActivity) getActivity()).getAttack(), new String[] {
-					getActivity().getString(R.string.laag),
-					getActivity().getString(R.string.gemiddeld),
-					getActivity().getString(R.string.hoog) });
+			update(((MainActivity) getActivity()).getAttack());
 			super.onResume();
 		}
 
@@ -101,7 +77,6 @@ public class HPDTime extends SherlockFragmentActivity {
 				Bundle savedInstanceState) {
 			View v = inflater.inflate(R.layout.time_layout, container, false);
 			v.setTag(R.layout.time_layout);
-			ernst = (RadioGroup) v.findViewById(R.id.ernst);
 			startDate = (Button) v.findViewById(R.id.startDate);
 			startDate.setTag(R.id.startDate);
 			startDate.setOnClickListener(new OnClickListener() {
@@ -139,13 +114,6 @@ public class HPDTime extends SherlockFragmentActivity {
 
 				}
 			});
-			if (!HeadacheDiaryApp.getApp()
-					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0)
-					.getBoolean("pref_year_view", true)) {
-				View spark = v.findViewById(R.id.spark);
-				spark.setVisibility(View.GONE);
-			}
-			view = v;
 			return v;
 		}
 
@@ -210,12 +178,22 @@ public class HPDTime extends SherlockFragmentActivity {
 					updateTimes(startDate, startTime, startDateYear,
 							startDateMonth, startDateDay, startTimeHour,
 							startTimeMinute);
+					((MainActivity) getActivity()).getAttack().start.set(
+							startDateYear, startDateMonth, startDateDay,
+							hourOfDay, minute, 0);
+					compareDates(true,
+							((MainActivity) getActivity()).getAttack());
 					break;
 				case R.id.endTime:
 					endTimeHour = hourOfDay;
 					endTimeMinute = minute;
 					updateTimes(endDate, endTime, endDateYear, endDateMonth,
 							endDateDay, endTimeHour, endTimeMinute);
+					((MainActivity) getActivity()).getAttack().end.set(
+							endDateYear, endDateMonth, endDateDay, hourOfDay,
+							minute, 0);
+					compareDates(false,
+							((MainActivity) getActivity()).getAttack());
 					break;
 
 				}
@@ -258,6 +236,11 @@ public class HPDTime extends SherlockFragmentActivity {
 					endDateYear = year;
 					updateTimes(endDate, endTime, endDateYear, endDateMonth,
 							endDateDay, endTimeHour, endTimeMinute);
+					((MainActivity) getActivity()).getAttack().end.set(
+							endDateYear, endDateMonth, endDateDay, endTimeHour,
+							endTimeMinute, 0);
+					compareDates(false,
+							((MainActivity) getActivity()).getAttack());
 					break;
 				case R.id.startDate:
 					startDateDay = day;
@@ -266,7 +249,65 @@ public class HPDTime extends SherlockFragmentActivity {
 					updateTimes(startDate, startTime, startDateYear,
 							startDateMonth, startDateDay, startTimeHour,
 							startTimeMinute);
+					((MainActivity) getActivity()).getAttack().start.set(
+							startDateYear, startDateMonth, startDateDay,
+							startTimeHour, startTimeMinute, 0);
+					compareDates(true,
+							((MainActivity) getActivity()).getAttack());
 					break;
+				}
+			}
+		}
+
+		public static void compareDates(boolean start, HeadacheAttack a) {
+			// Make sure the end date is at least 1 minute/hour after the start
+			// date
+			Calendar s = Calendar.getInstance();
+			s.set(Calendar.YEAR, startDateYear);
+			s.set(Calendar.MONTH, startDateMonth);
+			s.set(Calendar.DAY_OF_MONTH, startDateDay);
+			s.set(Calendar.HOUR_OF_DAY, startTimeHour);
+			s.set(Calendar.MINUTE, startTimeMinute);
+			s.set(Calendar.SECOND, 0);
+			s.set(Calendar.MILLISECOND, 0);
+			Calendar e = Calendar.getInstance();
+			e.set(Calendar.YEAR, endDateYear);
+			e.set(Calendar.MONTH, endDateMonth);
+			e.set(Calendar.DAY_OF_MONTH, endDateDay);
+			e.set(Calendar.HOUR_OF_DAY, endTimeHour);
+			e.set(Calendar.MINUTE, endTimeMinute);
+			e.set(Calendar.SECOND, 0);
+			e.set(Calendar.MILLISECOND, 0);
+			if (start) {
+				if (e.before(s)) {
+					// make e => s+1h
+					Calendar e2 = (Calendar) s.clone();
+					e2.add(Calendar.HOUR_OF_DAY, 1);
+					endDateYear = e2.get(Calendar.YEAR);
+					endDateMonth = e2.get(Calendar.MONTH);
+					endDateDay = e2.get(Calendar.DAY_OF_MONTH);
+					endTimeHour = e2.get(Calendar.HOUR_OF_DAY);
+					endTimeMinute = e2.get(Calendar.MINUTE);
+					updateTimes(endDate, endTime, endDateYear, endDateMonth,
+							endDateDay, endTimeHour, endTimeMinute);
+					a.end.set(endDateYear, endDateMonth, endDateDay,
+							endTimeHour, endTimeMinute, 0);
+				}
+			} else {
+				if (s.after(e)) {
+					// make s => e-1h
+					Calendar s2 = (Calendar) e.clone();
+					s2.add(Calendar.HOUR_OF_DAY, -1);
+					startDateYear = s2.get(Calendar.YEAR);
+					startDateMonth = s2.get(Calendar.MONTH);
+					startDateDay = s2.get(Calendar.DAY_OF_MONTH);
+					startTimeHour = s2.get(Calendar.HOUR_OF_DAY);
+					startTimeMinute = s2.get(Calendar.MINUTE);
+					updateTimes(startDate, startTime, startDateYear,
+							startDateMonth, startDateDay, startTimeHour,
+							startTimeMinute);
+					a.start.set(startDateYear, startDateMonth, startDateDay,
+							startTimeHour, startTimeMinute, 0);
 				}
 			}
 		}

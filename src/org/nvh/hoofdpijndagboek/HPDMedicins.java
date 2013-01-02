@@ -55,7 +55,7 @@ public class HPDMedicins extends SherlockFragmentActivity {
 		public void getPillsFromCalendar() {
 			// remove the items in the list
 			items.clear();
-			// TODO: This should depend on the date in the TimingFragment
+			// This depends on the date in the TimingFragment
 			// but loosely. Pills are taken regularly and on demand
 			HeadacheAttack a = ((MainActivity)getActivity()).getAttack();
 			Calendar startAttack = Calendar.getInstance();

@@ -40,7 +40,8 @@
     <string name="show_year_view">toon jaaroverzicht</string>
     <string name="restart">Je moet de app herstarten om dit te laten werken</string>
     <string name="select_csv_file">Kies een csv bestand</string>
-
+	<string name="multiple_attacks">meerdere aanvallen op deze dag</string>
+	
     <string-array name="weather_array">
         <item>niet relevant</item>
         <item>sneeuw</item>
@@ -96,7 +97,9 @@
     <string name="pill_new_medicin">voeg een nieuw medicijn toe</string>
     <string name="pill_new_message">de werkzame stof van het medicijn of de merknaam, een getal geeft het gehalte in mg van de werkzame stof weer</string>
     <string name="pill_content_description">ikoon geeft effect weer</string>
+    <string name="pill_save_message">wijzigingen opslaan?</string>
     <string name="date_parse_error">er is iets misgegaan met de opgeslagen datum.</string>
+    <string name="delete_message">alles wissen?</string>
 
     <string-array name="pill_effect_array">
         <item>weet niet</item>

@@ -7,11 +7,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 
 import android.app.AlertDialog;
-import android.content.ContentResolver;
-import android.content.ContentValues;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -49,6 +47,8 @@ public class MainActivity extends SherlockFragmentActivity {
 	LocationListener locationListener;
 	Address here = null;
 	int geoCodeExceptionCounter = 0;
+
+	final int CHOOSE_A_CSV_FILE = 123;
 
 	private HeadacheAttack attack = null;
 
@@ -96,13 +96,13 @@ public class MainActivity extends SherlockFragmentActivity {
 						getResources().getDrawable(R.drawable.lefthead)),
 				HPDHeadRight.HurtingFragmentRight.class, null);
 		mTabsAdapter.addTab(
-				mTabHost.newTabSpec("Medicijnen").setIndicator("",
-						getResources().getDrawable(R.drawable.medicin2)),
-				HPDMedicins.ArrayListFragment.class, null);
-		mTabsAdapter.addTab(
 				mTabHost.newTabSpec("Symptomen").setIndicator("",
 						getResources().getDrawable(R.drawable.symptoms)),
 				HPDDetails.SymptomsFragment.class, null);
+		mTabsAdapter.addTab(
+				mTabHost.newTabSpec("Medicijnen").setIndicator("",
+						getResources().getDrawable(R.drawable.medicin2)),
+				HPDMedicins.ArrayListFragment.class, null);
 
 		if (savedInstanceState != null) {
 			mTabHost.setCurrentTabByTag(savedInstanceState.getString("tab"));
@@ -143,13 +143,27 @@ public class MainActivity extends SherlockFragmentActivity {
 	private void initializeAttack() {
 		HeadacheAttack a = getAttack();
 		Calendar c = Calendar.getInstance();
-		c.add(Calendar.HOUR_OF_DAY, Integer.valueOf(HeadacheDiaryApp.getApp().getSharedPreferences(
-				Utils.GENERAL_PREFS_NAME, 0).getString("pref_attack_start", "-5")));
+		// users can destroy apps by entering stupid things
+		int value = 0;
+		try {
+			value = Integer.valueOf(HeadacheDiaryApp.getApp()
+					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0)
+					.getString("pref_attack_start", "-5"));
+		} catch (NumberFormatException nfe) {
+			value = -5;
+		}
+		c.add(Calendar.HOUR_OF_DAY, value);
 		c.set(Calendar.MINUTE, 0);
 		a.start = c;
 		a.end = (Calendar) c.clone();
-		a.end.add(Calendar.HOUR_OF_DAY, Integer.valueOf(HeadacheDiaryApp.getApp().getSharedPreferences(
-				Utils.GENERAL_PREFS_NAME, 0).getString("pref_attack_length", "4")));
+		try {
+			value = Integer.valueOf(HeadacheDiaryApp.getApp()
+					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0)
+					.getString("pref_attack_length", "4"));
+		} catch (NumberFormatException nfe) {
+			value = 4;
+		}
+		a.end.add(Calendar.HOUR_OF_DAY, value);
 		a.leftPainPoints = new ArrayList<PainPoint>();
 		a.rightPainPoints = new ArrayList<PainPoint>();
 		a.misselijk = false;
@@ -162,7 +176,6 @@ public class MainActivity extends SherlockFragmentActivity {
 		a.licht = false;
 		a.stoelgang = false;
 		a.weer = "";
-		a.ernst = getString(R.string.laag);
 	}
 
 	protected void makeUseOfNewLocation(Location location) {
@@ -215,15 +228,29 @@ public class MainActivity extends SherlockFragmentActivity {
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-	    // Check which request we're responding to
-	    if (requestCode == 123) {
-	        // Make sure the request was successful
-	        if (resultCode == RESULT_OK) {
-	        	Toast.makeText(getApplicationContext(), data.getDataString(), Toast.LENGTH_LONG).show();
-	        	Utils.importHeadaches(data.getData(), this);
-	        }
-	    }
+	protected void onActivityResult(int requestCode, int resultCode,
+			final Intent data) {
+		// Check which request we're responding to
+		if (requestCode == CHOOSE_A_CSV_FILE) {
+			// Make sure the request was successful
+			if (resultCode == RESULT_OK) {
+				// prepare for a progress bar dialog
+				final ProgressDialog progressBar = new ProgressDialog(this);
+				progressBar.setMessage(getString(R.string.import_headaches)
+						+ ": " + data.getDataString());
+				progressBar.show();
+				new Thread(new Runnable() {
+					public void run() {
+						Utils.importHeadaches(data.getData(), MainActivity.this);
+						View hcv = findViewById(R.id.hcv);
+						if (hcv != null) {
+							((HeadacheCalendarView) hcv).redraw();
+						}
+						progressBar.dismiss();
+					}
+				}).start();
+			}
+		}
 	}
 
 	@Override
@@ -231,6 +258,12 @@ public class MainActivity extends SherlockFragmentActivity {
 		// we have to gather the information from all the tabs and
 		// create one or more (medication) entries in the calendar
 		switch (item.getItemId()) {
+		case R.id.menu_remove_headaches:
+			deleteAttacks(getString(R.string.calendar_entry_title));
+			return true;
+		case R.id.menu_remove_pills:
+			deleteAttacks(getString(R.string.calendar_pill_title));
+			return true;
 		case R.id.menu_prefs:
 			startActivity(new Intent(this, HeadachePreferences.class));
 			return true;
@@ -248,48 +281,57 @@ public class MainActivity extends SherlockFragmentActivity {
 			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 			intent.setType("text/csv");
 
-			// Do this if you need to be able to open the returned URI as a stream
+			// Do this if you need to be able to open the returned URI as a
+			// stream
 			// (for example here to read the image data).
 			intent.addCategory(Intent.CATEGORY_OPENABLE);
-			//intent.addCategory(Intent.EXTRA_LOCAL_ONLY);
-			Intent finalIntent = Intent.createChooser(intent, getString(R.string.select_csv_file));
-			startActivityForResult(finalIntent, 123);
+			// intent.addCategory(Intent.EXTRA_LOCAL_ONLY);
+			Intent finalIntent = Intent.createChooser(intent,
+					getString(R.string.select_csv_file));
+			startActivityForResult(finalIntent, CHOOSE_A_CSV_FILE);
 			return true;
 		case R.id.menu_save_headaches:
 			// save all headaches to disk
-			File path = Environment
+			final File path = Environment
 					.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-			Calendar now = Calendar.getInstance();
-			File file = new File(path, String.format("%s-%s.csv",
-					getString(R.string.app_name), Utils.formatNoSeparators(now)));
-			Utils.saveHeadacheEvents(file, this);
-			Toast.makeText(this, file.getAbsolutePath(), Toast.LENGTH_LONG)
-					.show();
-	        // Tell the media scanner about the new file so that it is
-	        // immediately available to the user.
-	        MediaScannerConnection.scanFile(this,
-	                new String[] { file.toString() }, null,
-	                new MediaScannerConnection.OnScanCompletedListener() {
-	            public void onScanCompleted(String path, Uri uri) {
-	                Log.i("ExternalStorage", "Scanned " + path + ":");
-	                Log.i("ExternalStorage", "-> uri=" + uri);
-	            }
-	        });
-			file = new File(path, String.format("%s-%s.csv",
-					getString(R.string.calendar_pill_title), Utils.formatNoSeparators(now)));
-			Utils.savePillEvents(file, this);
-			Toast.makeText(this, file.getAbsolutePath(), Toast.LENGTH_LONG)
-					.show();
-	        // Tell the media scanner about the new file so that it is
-	        // immediately available to the user.
-	        MediaScannerConnection.scanFile(this,
-	                new String[] { file.toString() }, null,
-	                new MediaScannerConnection.OnScanCompletedListener() {
-	            public void onScanCompleted(String path, Uri uri) {
-	                Log.i("ExternalStorage", "Scanned " + path + ":");
-	                Log.i("ExternalStorage", "-> uri=" + uri);
-	            }
-	        });
+			final Calendar now = Calendar.getInstance();
+			final File file = new File(path,
+					String.format("%s-%s.csv", getString(R.string.app_name),
+							Utils.formatNoSeparators(now)));
+			final ProgressDialog pd = new ProgressDialog(this);
+			pd.setMessage(getString(R.string.save_headaches)+": "+file.getAbsolutePath());
+			pd.show();
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					Utils.saveHeadacheEvents(file, MainActivity.this);
+					// Tell the media scanner about the new file so that it is
+					// immediately available to the user.
+					MediaScannerConnection.scanFile(MainActivity.this,
+							new String[] { file.toString() }, null,
+							new MediaScannerConnection.OnScanCompletedListener() {
+								public void onScanCompleted(String path, Uri uri) {
+									Log.i("ExternalStorage", "Scanned " + path + ":");
+									Log.i("ExternalStorage", "-> uri=" + uri);
+								}
+							});
+					File pillFile = new File(path, String.format("%s-%s.csv",
+							getString(R.string.calendar_pill_title),
+							Utils.formatNoSeparators(now)));
+					Utils.savePillEvents(pillFile, MainActivity.this);
+					// Tell the media scanner about the new file so that it is
+					// immediately available to the user.
+					MediaScannerConnection.scanFile(MainActivity.this,
+							new String[] { pillFile.toString() }, null,
+							new MediaScannerConnection.OnScanCompletedListener() {
+								public void onScanCompleted(String path, Uri uri) {
+									Log.i("ExternalStorage", "Scanned " + path + ":");
+									Log.i("ExternalStorage", "-> uri=" + uri);
+								}
+							});
+					pd.dismiss();
+				}
+			}).start();
 			return true;
 		case R.id.menu_save_headache:
 			// headaches starting more than a year ago
@@ -327,58 +369,52 @@ public class MainActivity extends SherlockFragmentActivity {
 		return false;
 	}
 
+	private void deleteAttacks(final String title) {
+		DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				switch (which) {
+				case DialogInterface.BUTTON_POSITIVE:
+					final ProgressDialog progressDialog = new ProgressDialog(
+							MainActivity.this);
+					progressDialog.setMessage(getString(R.string.remove_headaches) + ": " + title);
+					progressDialog.show();
+					new Thread(new Runnable() {
+						public void run() {
+							Utils.deleteAttacks(MainActivity.this, title);
+							View hcv = findViewById(R.id.hcv);
+							if (hcv != null) {
+								((HeadacheCalendarView) hcv).redraw();
+							}
+							progressDialog.dismiss();
+						}
+					}).start();
+					break;
+
+				case DialogInterface.BUTTON_NEGATIVE:
+					// we do nothing
+					break;
+				}
+			}
+		};
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(title)
+				.setMessage(getString(R.string.delete_message))
+				.setPositiveButton(getString(android.R.string.ok),
+						dialogClickListener)
+				.setNegativeButton(getString(android.R.string.cancel),
+						dialogClickListener).show();
+	}
+
 	private boolean saveAttackInCalendar(Calendar start, Calendar stop) {
-		StringBuilder message = new StringBuilder();
-		try {
-			message.append(HPDTime.TimingFragment.getData());
-		} catch (Exception e) {
-		} finally {
-			// user did not visit one of the other tabs
-		}
-		try {
-			message.append(HPDDetails.SymptomsFragment.getData());
-		} catch (Exception e) {
-		} finally {
-		}
-		message.append(getString(R.string.left)).append(":")
-				.append(getString(R.string.ouch)).append("\n");
-		try {
-			message.append(HPDHeadLeft.HurtingFragmentLeft.getData());
-		} catch (Exception e) {
-		} finally {
-		}
-		message.append(getString(R.string.right)).append(":")
-				.append(getString(R.string.ouch)).append("\n");
-		try {
-			message.append(HPDHeadRight.HurtingFragmentRight.getData());
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-		}
-		// TODO: Check for duplicates. Repeatedly hitting the save
-		// button inserts events.
-		ContentResolver cr = getContentResolver();
-		ContentValues values = new ContentValues();
-		values.put("calendar_id", 1);
-		values.put("dtstart", start.getTimeInMillis());
-		values.put("dtend", stop.getTimeInMillis());
-		values.put("title", getString(R.string.calendar_entry_title));
-		values.put("description", message.toString());
-		values.put("eventTimezone", TimeZone.getDefault().getID());
-		values.put("eventLocation", getLocation());
-		values.put("hasAlarm", 0); // no alarm
-		values.put("eventStatus", 1); // confirmed
-		if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
-			// the tablet does not understand these columns
-			values.put("availability", 1); // not blocking? TODO: might be a
-											// preference
-			values.put("accessLevel", 2); // private
-		}
-		cr.insert(Uri.parse(Utils.getCalendarUriBase(cr) + "events"), values);
+		HeadacheAttack attack = getAttack();
+		attack.start = start;
+		attack.end = stop;
+		Utils.addToCalendar(attack, this);
 		// This is only needed when we are on the first tab
 		View hcv = findViewById(R.id.hcv);
 		if (hcv != null) {
-			hcv.invalidate();
+			((HeadacheCalendarView) hcv).redraw();
 		}
 		// provide some feedback
 		Toast.makeText(MainActivity.this, R.string.event_saved,
@@ -440,9 +476,7 @@ public class MainActivity extends SherlockFragmentActivity {
 	}
 
 	public void repaintTabs() {
-		HPDTime.TimingFragment.pleaseUpdate(getAttack(), new String[] {
-				getString(R.string.laag), getString(R.string.gemiddeld),
-				getString(R.string.hoog) });
+		HPDTime.TimingFragment.pleaseUpdate(getAttack());
 		HPDDetails.SymptomsFragment.pleaseUpdate(getAttack(), getResources()
 				.getStringArray(R.array.weather_array), getResources()
 				.getStringArray(R.array.humeur_array));

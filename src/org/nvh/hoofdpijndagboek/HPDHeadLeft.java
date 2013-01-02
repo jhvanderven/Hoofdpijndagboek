@@ -2,7 +2,6 @@ package org.nvh.hoofdpijndagboek;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
@@ -14,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -25,7 +25,8 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 
 public class HPDHeadLeft extends SherlockFragmentActivity {
 	public static List<PainPoint> points = new ArrayList<PainPoint>();
-	protected static int[] ernst = new int[] { Color.YELLOW, Color.MAGENTA, Color.RED };
+	protected static int[] ernst = new int[] { Color.YELLOW, Color.MAGENTA,
+			Color.RED };
 	protected static PainPoint lastPoint;
 
 	public static class HurtingFragmentLeft extends SherlockFragment {
@@ -50,34 +51,15 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 			super.onResume();
 		}
 
-		public static String getData() {
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < points.size(); i++) {
-				PainPoint p = points.get(i);
-				sb.append("au")
-						.append(":")
-						.append(String.format(Locale.US, "%1.3f",
-								p.x / view.getWidth()))
-						.append(";")
-						.append(String.format(Locale.US, "%1.3f",
-								p.y / view.getHeight())).append(";")
-						.append(p.colorIndex).append("\n");
-
-			}
-			return sb.toString();
-		}
-
 		// storedPoints are in fractions of the width and height and have no
 		// size
 		public static void setPainPoints(List<PainPoint> storedPoints) {
 			points = storedPoints;
-			int w = view.getWidth();
-			int h = view.getHeight();
-			for (PainPoint p : points) {
-				p.x = p.x * w;
-				p.y = p.y * h;
-				p.size = w / 10;
+			if (view == null) {
+				// the thing has not been created yet.'
+				return;
 			}
+			view.postInvalidate();
 		}
 	}
 
@@ -109,7 +91,8 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
-			SharedPreferences sp = HeadacheDiaryApp.getApp().getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
+			SharedPreferences sp = HeadacheDiaryApp.getApp()
+					.getSharedPreferences(Utils.GENERAL_PREFS_NAME, 0);
 			ernst[0] = sp.getInt("pref_low", 0);
 			ernst[1] = sp.getInt("pref_average", 0);
 			ernst[2] = sp.getInt("pref_high", 0);
@@ -118,19 +101,14 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 			MainActivity m = (MainActivity) getContext();
 			points = m.getPainPoints(0);
 			canvas.drawBitmap(b, null, dest, paint);
-			if (points == null)
+			if (points == null) {
 				return;
+			}
 			int w = getWidth();
 			int h = getHeight();
 			for (PainPoint p : points) {
 				paint.setColor(ernst[p.colorIndex]);
-				if (p.x < 1 && p.y < 1) {
-					// not multiplied by width and height
-					p.x *= w;
-					p.y *= h;
-					p.size = w / 10;
-				}
-				canvas.drawCircle(p.x, p.y, p.size, paint);
+				canvas.drawCircle(p.x * w, p.y * h, w / 10, paint);
 			}
 		}
 
@@ -154,37 +132,30 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
 			if (lastPoint != null) {
-				lastPoint.x = e2.getX();
-				lastPoint.y = e2.getY();
-				this.postInvalidate();
+				lastPoint.x = e2.getX()/getWidth();
+				lastPoint.y = e2.getY()/getHeight();
+				this.invalidate();
+				Log.i("HPD", "Left-Scrolling to " + lastPoint.x + ", " + lastPoint.y);
 			}
 			return true;
 		}
 
 		@Override
-		public void onShowPress(MotionEvent e) {
-			PainPoint p = new PainPoint();
-			p.x = e.getX();
-			p.y = e.getY();
-			p.colorIndex = 0;
-			p.size = getWidth() / 10;
-			points.add(p);
-			lastPoint = p;
-		}
-
-		@Override
 		public boolean onSingleTapUp(MotionEvent e) {
+			Log.i("HPD", "onSingleTapUp-left");
 			PainPoint p = new PainPoint();
 			p.x = e.getX();
 			p.y = e.getY();
 			// we want to remove the circle that contains this point
 			// if the user has already drawn something
 			// light->medium->heavy->gone
+			int w = getWidth();
+			int h = getHeight();
 			boolean newPain = true;
 			int i = 0;
 			while (i < points.size()) {
-				double square_dist = Math.pow((points.get(i).x - p.x), 2)
-						+ Math.pow((points.get(i).y - p.y), 2);
+				double square_dist = Math.pow((points.get(i).x * w - p.x), 2)
+						+ Math.pow((points.get(i).y * h - p.y), 2);
 				if (square_dist < Math.pow(points.get(i).size, 2)) {
 					newPain = false; // an old point under the finger
 					for (int c = 0; c < 3; c++) {
@@ -203,12 +174,27 @@ public class HPDHeadLeft extends SherlockFragmentActivity {
 			}
 			if (newPain) {
 				p.colorIndex = 0;
-				p.size = getWidth() / 10;
+				p.size = w / 10;
+				p.x /= w;
+				p.y /= h;
 				points.add(p);
 			}
 			lastPoint = null; // no more dragging around after the Up event
-			this.postInvalidate();
+			this.invalidate();
 			return true;
+		}
+
+		@Override
+		public void onShowPress(MotionEvent e) {
+			Log.i("HPD", "ShowPress-left");
+			PainPoint p = new PainPoint();
+			p.x = e.getX() / getWidth();
+			p.y = e.getY() / getHeight();
+			p.colorIndex = 0;
+			p.size = getWidth() / 10;
+			points.add(p);
+			lastPoint = p;
+			this.invalidate();
 		}
 	}
 }

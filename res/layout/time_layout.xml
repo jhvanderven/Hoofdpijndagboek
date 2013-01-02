@@ -44,50 +44,10 @@
             android:text="@string/pick_time" />
     </LinearLayout>
 
-    <RadioGroup
-        android:id="@+id/ernst"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal" >
-
-        <RadioButton
-            android:id="@+id/laag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="@string/laag" />
-
-        <RadioButton
-            android:id="@+id/gemiddeld"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="@string/gemiddeld" />
-
-        <RadioButton
-            android:id="@+id/hoog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="@string/hoog" />
-    </RadioGroup>
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical" >
-
-        <org.nvh.hoofdpijndagboek.HeadacheSparkView
-            android:id="@+id/spark"
-            android:layout_width="match_parent"
-            android:layout_height="10dip"
-            android:layout_weight="1" />
-
-        <org.nvh.hoofdpijndagboek.HeadacheCalendarView
-            android:id="@+id/hcv"
-            android:layout_width="match_parent"
-            android:layout_height="0dip"
-            android:layout_weight="15" />
-    </LinearLayout>
+    <org.nvh.hoofdpijndagboek.HeadacheCalendarView
+        android:id="@+id/hcv"
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="15" />
 
 </LinearLayout>

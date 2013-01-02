@@ -12,7 +12,6 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
 
@@ -59,8 +58,27 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 		@Override
 		public void onPause() {
 			if(dirty){
-				// TODO: Yes/No/Cancel dialog
-				Toast.makeText(getActivity(), "You have made changes. These are lost now.", Toast.LENGTH_LONG).show();
+				DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						switch (which) {
+						case DialogInterface.BUTTON_POSITIVE:
+							Utils.saveAllMedication(pills, getActivity());
+							break;
+
+						case DialogInterface.BUTTON_NEGATIVE:
+							// we do nothing
+							break;
+						}
+					}
+				};
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setTitle(getString(R.string.menu_save))
+						.setMessage(getString(R.string.pill_save_message))
+						.setPositiveButton(getString(android.R.string.ok),
+								dialogClickListener)
+						.setNegativeButton(getString(android.R.string.cancel),
+								dialogClickListener).show();
 			}
 			super.onPause();
 		}
@@ -82,7 +100,6 @@ public class EditPillsActivity extends SherlockFragmentActivity {
 		@Override
 		public void onCreateContextMenu(ContextMenu menu, View v,
 				ContextMenuInfo menuInfo) {
-			// TODO Auto-generated method stub
 			super.onCreateContextMenu(menu, v, menuInfo);
 			MenuInflater inflater = getActivity().getMenuInflater();
 			inflater.inflate(R.menu.medicin_item_menu, (android.view.Menu) menu);

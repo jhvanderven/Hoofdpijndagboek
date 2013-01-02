@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory
+        android:key="pref_key_calendar_settings"
+        android:title="Kalender" >
+        <org.nvh.hoofdpijndagboek.ColorPreference
+            android:key="pref_low"
+            android:summary="ffffff00"
+            android:title="@string/laag" />
+        <org.nvh.hoofdpijndagboek.ColorPreference
+            android:key="pref_average"
+            android:summary="ffff00ff"
+            android:title="@string/gemiddeld" />
+        <org.nvh.hoofdpijndagboek.ColorPreference
+            android:key="pref_high"
+            android:summary="ffff0000"
+            android:title="@string/hoog" />
+        <org.nvh.hoofdpijndagboek.ColorPreference
+            android:key="pref_other"
+            android:summary="ff888888"
+            android:title="@string/andere_afspraken" />
+        <EditTextPreference android:key="pref_attack_start" android:defaultValue="-5" android:title="@string/attack_start"/>
+        <EditTextPreference android:defaultValue="4" android:key="pref_attack_length" android:title="@string/attack_length"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

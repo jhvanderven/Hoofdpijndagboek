@@ -6,12 +6,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,6 +15,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import android.app.Activity;
@@ -39,19 +36,15 @@ import android.widget.Toast;
 public class Utils {
 	public static final String PREFS_NAME = "PillsFile";
 	public static final String GENERAL_PREFS_NAME = "org.nvh.hoofdpijndagboek_preferences";
+	private static SimpleDateFormat onlyTime;
+	private static SimpleDateFormat noSeparators;
+	private static SimpleDateFormat veryLongDate;
 
 	public static void readAttack(HeadacheAttack attack, String description,
 			Context context) throws Exception {
 		attack.start = handleDateAndTime(description, "begin", context);
 		attack.end = handleDateAndTime(description, "end", context);
-		attack.ernst = Utils.parseDescription(description,
-				context.getString(R.string.ernst));
-		attack.leftPainPoints = Utils.parseDescriptionOuch(description,
-				context.getString(R.string.left),
-				context.getString(R.string.ouch));
-		attack.rightPainPoints = Utils.parseDescriptionOuch(description,
-				context.getString(R.string.right),
-				context.getString(R.string.ouch));
+		readAttackPain(attack, description, context);
 		attack.misselijk = Utils.parseDescription(description,
 				context.getString(R.string.misselijk)).equalsIgnoreCase(
 				context.getString(R.string.ja));
@@ -80,6 +73,16 @@ public class Utils {
 				context.getString(R.string.humeur));
 		attack.weer = Utils.parseDescription(description,
 				context.getString(R.string.weer));
+	}
+
+	public static void readAttackPain(HeadacheAttack attack,
+			String description, Context context) throws Exception {
+		attack.leftPainPoints = Utils.parseDescriptionOuch(description,
+				context.getString(R.string.left),
+				context.getString(R.string.ouch));
+		attack.rightPainPoints = Utils.parseDescriptionOuch(description,
+				context.getString(R.string.right),
+				context.getString(R.string.ouch));
 	}
 
 	private static Calendar handleDateAndTime(String description, String field,
@@ -181,7 +184,7 @@ public class Utils {
 	}
 
 	public static Date parse(String in, String format) throws ParseException {
-		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format, Locale.US);
 		Date date = dateFormat.parse(in);
 		return date;
 	}
@@ -274,7 +277,6 @@ public class Utils {
 		Calendar min = (Calendar) days[0].clone();
 		Calendar max = (Calendar) days[0].clone();
 
-		// TODO: How much time are we allowing here?
 		min.add(Calendar.DAY_OF_MONTH, -1);
 		max.add(Calendar.DAY_OF_MONTH, 1);
 		Uri.Builder builder = Uri.parse(
@@ -334,8 +336,9 @@ public class Utils {
 	}
 
 	public static String format(Calendar c) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-		return sdf.format(c.getTime());
+		if (veryLongDate == null)
+			veryLongDate = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		return veryLongDate.format(c.getTime());
 	}
 
 	public static String formatNoYear(Calendar c) {
@@ -374,7 +377,12 @@ public class Utils {
 				String pain = "", split;
 				do {
 					p1 = description.indexOf('\n', p2 + 1);
-					pain = description.substring(p2 + 1, p1);
+					if (p1 == -1) {
+						// somehow latest \n is sometimes lost
+						pain = description.substring(p2 + 1);
+					} else {
+						pain = description.substring(p2 + 1, p1);
+					}
 					p2 = p1;
 					if (pain.startsWith(ouch)) {
 						p1 = pain.indexOf(':');
@@ -408,13 +416,19 @@ public class Utils {
 			try {
 				Utils.readAttack(a, hit, context);
 				// now put in what we can show in a summary
-				String item = Utils.formatNoYear(a.start) + " - "
-						+ Utils.formatNoYear(a.end) + " : " + a.ernst;
+				String item = Utils.formatOnlyTime(a.start) + " - "
+						+ Utils.formatOnlyTime(a.end) + " : " + a.getErnst();
 				s.add(item);
 			} catch (Exception e) {
 			}
 		}
 		return s;
+	}
+
+	private static String formatOnlyTime(Calendar start) {
+		if (onlyTime == null)
+			onlyTime = new SimpleDateFormat("HH:mm");
+		return onlyTime.format(start.getTime());
 	}
 
 	public static List<String> getEventsAsOf(String title, Calendar start,
@@ -470,48 +484,53 @@ public class Utils {
 			bw = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(file), "UTF8"));
 			StringBuilder sb = new StringBuilder();
+			String endQuoteAndComma = "\",";
+			String beginQuote = "\"";
+			String comma = ",";
 			// columns
-			sb.append("\"").append(activity.getString(R.string.start))
-					.append("\",").append("\"")
-					.append(activity.getString(R.string.end)).append("\",")
-					.append("\"").append(activity.getString(R.string.ernst))
-					.append("\",").append("\"")
+			sb.append(beginQuote).append(activity.getString(R.string.start))
+					.append(endQuoteAndComma).append(beginQuote)
+					.append(activity.getString(R.string.end))
+					.append(endQuoteAndComma).append(beginQuote)
 					.append(activity.getString(R.string.menstruatie))
-					.append("\",").append("\"")
+					.append(endQuoteAndComma).append(beginQuote)
 					.append(activity.getString(R.string.misselijk))
-					.append("\",").append("\"")
-					.append(activity.getString(R.string.licht)).append("\",")
-					.append("\"").append(activity.getString(R.string.duizelig))
-					.append("\",").append("\"")
-					.append(activity.getString(R.string.geur)).append("\",")
-					.append("\"").append(activity.getString(R.string.inslapen))
-					.append("\",").append("\"")
+					.append(endQuoteAndComma).append(beginQuote)
+					.append(activity.getString(R.string.licht))
+					.append(endQuoteAndComma).append(beginQuote)
+					.append(activity.getString(R.string.duizelig))
+					.append(endQuoteAndComma).append(beginQuote)
+					.append(activity.getString(R.string.geur))
+					.append(endQuoteAndComma).append(beginQuote)
+					.append(activity.getString(R.string.inslapen))
+					.append(endQuoteAndComma).append(beginQuote)
 					.append(activity.getString(R.string.doorslapen))
-					.append("\",").append("\"")
+					.append(endQuoteAndComma).append(beginQuote)
 					.append(activity.getString(R.string.stoelgang))
-					.append("\",").append("\"")
-					.append(activity.getString(R.string.weer)).append("\",")
-					.append("\"").append(activity.getString(R.string.humeur))
-					.append("\",");
+					.append(endQuoteAndComma).append(beginQuote)
+					.append(activity.getString(R.string.weer))
+					.append(endQuoteAndComma).append(beginQuote)
+					.append(activity.getString(R.string.humeur))
+					.append(endQuoteAndComma);
 			for (int i = 0; i < 10; i++) {
-				sb.append("\"")
+				sb.append(beginQuote)
 						.append(activity.getString(R.string.left) + ".x[")
 						.append(i).append("]\",");
-				sb.append("\"")
+				sb.append(beginQuote)
 						.append(activity.getString(R.string.left) + ".y[")
 						.append(i).append("]\",");
-				sb.append("\"")
+				sb.append(beginQuote)
 						.append(activity.getString(R.string.left) + ".ci[")
 						.append(i).append("]\",");
 			}
 			for (int i = 0; i < 10; i++) {
-				sb.append("\"")
+				sb.append(beginQuote)
 						.append(activity.getString(R.string.right) + ".x[")
 						.append(i).append("]\",");
-				sb.append("\"")
+				sb.append(beginQuote)
 						.append(activity.getString(R.string.right) + ".y[")
 						.append(i).append("]\",");
-				sb.append("\"")
+				sb.append(beginQuote)
 						.append(activity.getString(R.string.right) + ".ci[")
 						.append(i).append("]\",");
 			}
@@ -522,46 +541,54 @@ public class Utils {
 				try {
 					readAttack(attack, event, activity);
 					// now write to a csv file
-					sb.append("\"").append(Utils.format(attack.start))
-							.append("\",").append("\"")
-							.append(Utils.format(attack.end)).append("\",")
-							.append("\"").append(attack.ernst).append("\",")
-							.append("\"").append(attack.menstruatie)
-							.append("\",").append("\"")
-							.append(attack.misselijk).append("\",")
-							.append("\"").append(attack.licht).append("\",")
-							.append("\"").append(attack.duizelig).append("\",")
-							.append("\"").append(attack.geur).append("\",")
-							.append("\"").append(attack.inslapen).append("\",")
-							.append("\"").append(attack.doorslapen)
-							.append("\",").append("\"")
-							.append(attack.stoelgang).append("\",")
-							.append("\"").append(attack.weer).append("\",")
-							.append("\"").append(attack.humeur).append("\",");
+					if (sb.length() > 0) {
+						if (sb.charAt(sb.length() - 1) == ',') {
+							sb.setCharAt(sb.length() - 1, '\n');
+						}
+					}
+					sb.append(beginQuote).append(Utils.format(attack.start))
+							.append(endQuoteAndComma).append(beginQuote)
+							.append(Utils.format(attack.end))
+							.append(endQuoteAndComma).append(beginQuote)
+							.append(attack.menstruatie)
+							.append(endQuoteAndComma).append(beginQuote)
+							.append(attack.misselijk).append(endQuoteAndComma)
+							.append(beginQuote).append(attack.licht)
+							.append(endQuoteAndComma).append(beginQuote)
+							.append(attack.duizelig).append(endQuoteAndComma)
+							.append(beginQuote).append(attack.geur)
+							.append(endQuoteAndComma).append(beginQuote)
+							.append(attack.inslapen).append(endQuoteAndComma)
+							.append(beginQuote).append(attack.doorslapen)
+							.append(endQuoteAndComma).append(beginQuote)
+							.append(attack.stoelgang).append(endQuoteAndComma)
+							.append(beginQuote).append(attack.weer)
+							.append(endQuoteAndComma).append(beginQuote)
+							.append(attack.humeur).append(endQuoteAndComma);
 					for (int i = 0; i < Math.min(10,
 							attack.leftPainPoints.size()); i++) {
 						if (attack.leftPainPoints.size() > i) {
 							sb.append(attack.leftPainPoints.get(i).x)
-									.append(",")
+									.append(comma)
 									.append(attack.leftPainPoints.get(i).y)
-									.append(",")
+									.append(comma)
 									.append(attack.leftPainPoints.get(i).colorIndex)
-									.append(",");
+									.append(comma);
 						} else {
-							sb.append(",").append(",").append(",");
+							sb.append(comma).append(comma).append(comma);
 						}
 					}
 					for (int i = 0; i < Math.min(10,
 							attack.rightPainPoints.size()); i++) {
 						if (attack.rightPainPoints.size() > i) {
 							sb.append(attack.rightPainPoints.get(i).x)
-									.append(",")
+									.append(comma)
 									.append(attack.rightPainPoints.get(i).y)
-									.append(",")
+									.append(comma)
 									.append(attack.rightPainPoints.get(i).colorIndex)
-									.append(",");
+									.append(comma);
 						} else {
-							sb.append(",").append(",").append(",");
+							sb.append(comma).append(comma).append(comma);
 						}
 					}
 					sb.deleteCharAt(sb.length() - 1);
@@ -581,8 +608,9 @@ public class Utils {
 	}
 
 	public static Object formatNoSeparators(Calendar c) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-		return sdf.format(c.getTime());
+		if (noSeparators == null)
+			noSeparators = new SimpleDateFormat("yyyyMMddHHmm");
+		return noSeparators.format(c.getTime());
 	}
 
 	public static void savePillEvents(File file, Activity activity) {
@@ -650,7 +678,7 @@ public class Utils {
 			return;
 		}
 
-		if(sb.length()==0){
+		if (sb.length() == 0) {
 			return; // nothing to do
 		}
 		String[] lines = sb.toString().split("\n");
@@ -666,23 +694,38 @@ public class Utils {
 			String[] firstItem = lines[1].split(",");
 			// the start date is the first element...
 			Calendar start = Calendar.getInstance();
-			// TODO: Spreadsheet apps change the format...
+			// Spreadsheet apps change the format...
 			try {
+				firstItem[0] = firstItem[0].replaceAll("\"", ""); // or we could
+																	// quote the
+																	// format
+																	// specifier
 				start.setTimeInMillis(Utils.parse(firstItem[0],
 						activity.getString(R.string.very_long_date_time))
 						.getTime());
 			} catch (ParseException e) {
-				Log.e("import", String.format("Cannot import dates formatted like this %s it needs to be %s", firstItem[0],activity.getString(R.string.very_long_date_time)));
-				Toast t = Toast.makeText(activity, "App needs dates likes this: " + activity.getString(R.string.very_long_date_time) + " and not like this: " + firstItem[0], Toast.LENGTH_LONG);
+				Log.e("import",
+						String.format(
+								"Cannot import dates formatted like this %s it needs to be %s",
+								firstItem[0],
+								activity.getString(R.string.very_long_date_time)));
+				Toast t = Toast
+						.makeText(
+								activity,
+								"App needs dates likes this: "
+										+ activity
+												.getString(R.string.very_long_date_time)
+										+ " and not like this: " + firstItem[0],
+								Toast.LENGTH_LONG);
 				t.getView().setBackgroundColor(Color.RED);
-				TextView v = (TextView) t.getView().findViewById(android.R.id.message);
+				TextView v = (TextView) t.getView().findViewById(
+						android.R.id.message);
 				v.setTextColor(Color.WHITE);
 				t.show();
 				return;
 			}
-			
-			
-		}else{
+
+		} else {
 			return; // nothing to do
 		}
 		if (columns[2].equalsIgnoreCase(activity.getString(R.string.pill_name))) {
@@ -702,7 +745,8 @@ public class Utils {
 							activity.getContentResolver());
 					Utils.addToCalendar(a, activity);
 				} else if (ids.size() > 1) {
-					// TODO: more than one event...
+					// more than one event...
+					Utils.addToCalendar(a, activity);
 				} else if (ids.size() == 0) {
 					Utils.addToCalendar(a, activity);
 				}
@@ -710,7 +754,7 @@ public class Utils {
 		}
 	}
 
-	private static void addToCalendar(HeadacheAttack a, Activity activity) {
+	static void addToCalendar(HeadacheAttack a, Activity activity) {
 		ContentResolver cr = activity.getContentResolver();
 		ContentValues values = new ContentValues();
 		values.put("calendar_id", 1);
@@ -724,8 +768,7 @@ public class Utils {
 		values.put("eventStatus", 1); // confirmed
 		if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.FROYO) {
 			// the tablet does not understand these columns
-			values.put("availability", 1); // not blocking? TODO: might be a
-											// preference
+			values.put("availability", 1); // not blocking
 			values.put("accessLevel", 2); // private
 		}
 		cr.insert(Uri.parse(Utils.getCalendarUriBase(cr) + "events"), values);
@@ -778,9 +821,7 @@ public class Utils {
 		// loop over the items, because there are always less items than or as
 		// much items as there are columns
 		for (int i = 0; i < items.length; i++) {
-			if (columns[i].equalsIgnoreCase(activity.getString(R.string.ernst))) {
-				a.ernst = items[i];
-			} else if (columns[i].equalsIgnoreCase(activity
+			if (columns[i].equalsIgnoreCase(activity
 					.getString(R.string.menstruatie))) {
 				a.menstruatie = items[i].equalsIgnoreCase("true");
 			} else if (columns[i].equalsIgnoreCase(activity
@@ -813,14 +854,13 @@ public class Utils {
 			} else if (columns[i].equalsIgnoreCase(activity
 					.getString(R.string.begin))) {
 				a.start = Calendar.getInstance();
-				// TODO: Spreadsheet apps change the format...
 				try {
 					a.start.setTimeInMillis(Utils.parse(items[i],
 							activity.getString(R.string.very_long_date_time))
 							.getTime());
 				} catch (ParseException e) {
-					// TODO: events end up on today... Is that better than
-					// ignoring?
+					// The check is made in importHeadaches,
+					// do nothing here.
 				}
 			} else if (columns[i].equalsIgnoreCase(activity
 					.getString(R.string.end))) {
@@ -830,8 +870,8 @@ public class Utils {
 							activity.getString(R.string.very_long_date_time))
 							.getTime());
 				} catch (ParseException e) {
-					// TODO: events end up on today... Is that better than
-					// ignoring?
+					// The check is made in importHeadaches,
+					// do nothing here.
 				}
 			} else if (columns[i].startsWith(activity.getString(R.string.left)
 					+ ".x")) {
@@ -885,5 +925,47 @@ public class Utils {
 		}
 
 		return text;
+	}
+
+	public static int getErnst(Context context, String description) {
+		HeadacheAttack a = new HeadacheAttack();
+		try {
+			readAttackPain(a, description, context);
+			return a.getErnst();
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	public static void deleteAttacks(Activity activity, String title) {
+		ContentResolver contentResolver = activity.getContentResolver();
+		String uriBase = Utils.getCalendarUriBase(contentResolver);
+		Uri.Builder builder = Uri.parse(uriBase + "instances/when/")
+				.buildUpon();
+		Calendar before = Calendar.getInstance();
+		before.add(Calendar.YEAR, -5);
+		ContentUris.appendId(builder, before.getTimeInMillis());
+		before.add(Calendar.YEAR, 5);
+		ContentUris.appendId(builder, before.getTimeInMillis());
+
+		Cursor eventCursor = contentResolver.query(builder.build(),
+				new String[] { "title", "event_id" }, null, null, null);
+
+		long id = 0;
+		if (eventCursor.getCount() > 0) {
+			while (eventCursor.moveToNext()) {
+				if (eventCursor.getString(0).equalsIgnoreCase(title)) {
+					id = eventCursor.getLong(1);
+					Uri eventsUri = Uri.parse(uriBase + "events");
+					Uri eventUri = ContentUris.withAppendedId(eventsUri, id);
+					int rows = contentResolver.delete(eventUri, null, null);
+					if (rows == 0) {
+						Log.e("Utils",
+								"Nothing deleted: " + eventUri.toString());
+					}
+				}
+			}
+		}
+		eventCursor.close();
 	}
 }

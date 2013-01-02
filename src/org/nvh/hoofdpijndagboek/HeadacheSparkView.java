@@ -59,7 +59,6 @@ public class HeadacheSparkView extends View {
 		colors[1] = sp.getInt("pref_low", 0);
 		colors[2] = sp.getInt("pref_average", 0);
 		colors[3] = sp.getInt("pref_high", 0);
-		// somehow I am for green axes
 		p.setColor(Color.LTGRAY);
 		canvas.drawLine(xoff, yoff, xoff, h - yoff, p);
 		canvas.drawLine(xoff, h - yoff - h5, w - xoff, h - yoff - h5, p);

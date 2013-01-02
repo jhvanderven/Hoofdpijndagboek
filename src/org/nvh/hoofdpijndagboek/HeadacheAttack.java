@@ -9,7 +9,6 @@ import android.content.Context;
 public class HeadacheAttack {
 	Calendar start;
 	Calendar end;
-	String ernst;
 	List<PainPoint> leftPainPoints;
 	List<PainPoint> rightPainPoints;
 	boolean misselijk;
@@ -30,6 +29,8 @@ public class HeadacheAttack {
 				.append(this.weer).append("\n");
 		sb.append(context.getString(R.string.humeur)).append(":")
 				.append(this.humeur).append("\n");
+		sb.append(context.getString(R.string.ernst)).append(":")
+				.append(this.getErnst()).append("\n");
 		if (this.menstruatie == true) {
 			sb.append(context.getString(R.string.menstruatie)).append(":")
 					.append(context.getString(R.string.ja)).append("\n");
@@ -64,29 +65,46 @@ public class HeadacheAttack {
 		}
 
 		if (this.leftPainPoints != null) {
-			sb.append(context.getString(R.string.left)).append(":").append(context.getString(R.string.ouch));
-			for (int i = 0; i < leftPainPoints.size(); i++) {
-				PainPoint p = leftPainPoints.get(i);
-				sb.append("au").append(":")
-						.append(String.format(Locale.US, "%1.3f", p.x))
-						.append(";")
-						.append(String.format(Locale.US, "%1.3f", p.y))
-						.append(";").append(p.colorIndex).append("\n");
+			sb.append(context.getString(R.string.left)).append(":")
+					.append(context.getString(R.string.ouch)).append("\n");
+			handlePainPoints(this.leftPainPoints, context, sb);
+		}
+		if (this.rightPainPoints != null) {
+			sb.append(context.getString(R.string.right)).append(":")
+					.append(context.getString(R.string.ouch)).append("\n");
+			handlePainPoints(this.rightPainPoints, context, sb);
+		}
+		return sb.toString();
+	}
 
+	private void handlePainPoints(List<PainPoint> points, Context context,
+			StringBuilder sb) {
+		for (PainPoint p : points) {
+			sb.append(context.getString(R.string.ouch)).append(":")
+					.append(String.format(Locale.US, "%1.3f", p.x)).append(";")
+					.append(String.format(Locale.US, "%1.3f", p.y)).append(";")
+					.append(p.colorIndex).append("\n");
+		}
+	}
+
+	int getErnst() {
+		int totalPain = 0;
+		int n = 0;
+		if (this.leftPainPoints != null) {
+			for (PainPoint p : this.leftPainPoints) {
+				totalPain += p.colorIndex;
+				n++;
 			}
 		}
 		if (this.rightPainPoints != null) {
-			sb.append(context.getString(R.string.right)).append(":").append(context.getString(R.string.ouch));
-			for (int i = 0; i < rightPainPoints.size(); i++) {
-				PainPoint p = rightPainPoints.get(i);
-				sb.append("au").append(":")
-						.append(String.format(Locale.US, "%1.3f", p.x))
-						.append(";")
-						.append(String.format(Locale.US, "%1.3f", p.y))
-						.append(";").append(p.colorIndex).append("\n");
-
+			for (PainPoint p : this.rightPainPoints) {
+				totalPain += p.colorIndex;
+				n++;
 			}
 		}
-		return sb.toString();
+		if (n == 0) {
+			return 0;
+		}
+		return (int) Math.ceil((double) totalPain / n);
 	}
 }
